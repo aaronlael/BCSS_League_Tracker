@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <form method="POST">
+        <table>
+            <thead>
+                <tr><th>id</th>
+                    <th>Player</th>
+                    <th>Place</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.name }}</td>
+                    <td><input type="number" name="value_{{ item.id }}" value="{{ item.value }}" required></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit">Update Values</button>
+    </form>
+
+{% endblock %}

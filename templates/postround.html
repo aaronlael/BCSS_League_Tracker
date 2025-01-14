@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>Tags and Payout Results</h1>
+
+    <form method="POST">
+        <table border="1">
+            <thead>
+                <tr><th>Player</th>
+                    <th>Place</th>
+                    <th>Tag Out</th>
+                    <th>Payout</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.place }}</td>
+                    <td>{{ item.tag_out }}</td>
+                    <td>{{ item.payout_dollars }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Enter Data</h1>
+
+    <form action="#" method="post">  <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="tag">tag:</label>
+        <input type="checkbox" id="tag" name="tag"><br><br>
+
+        <label for="tagNumber">Tag Number:</label><br>
+        <input type="number" id="tagNumber" name="tagNumber"><br><br>
+
+        <label for="payout">Payout:</label>
+        <input type="checkbox" id="payout" name="payout"><br><br>
+
+        <label for="ctp1">CTP1:</label>
+        <input type="checkbox" id="ctp1" name="ctp1"><br><br>
+
+        <label for="ctp2">CTP2:</label>
+        <input type="checkbox" id="ctp2" name="ctp2"><br><br>
+
+        <label for="ace_pot">Ace Pot:</label>
+        <input type="checkbox" id="ace_pot" name="ace_pot"><br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+
+{% endblock %}

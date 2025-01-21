@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>CTP Holder</h1>
+
+    <form method="POST">
+        <table border="1">
+            <thead>
+                <tr><th>id</th>
+                    <th>Player</th>
+                    <th>CTP</th>
+                    <th>New Player</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr><td>{{ item.id }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.ctp }}</td>
+                    <td><input type="text" name="new_name" id="new_name" required></td>
+                    <input type="hidden" name="ctp" value="{{ item.ctp }}">
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <input type="submit" value="Submit">
+    </form>
+{% endblock %}

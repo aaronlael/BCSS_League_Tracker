@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+  <h1>CTP Holders</h1>
+
+  <form method="POST">
+    <table border="1">
+      <thead>
+        <tr>
+          <th>CTP</th>
+          <th>Player</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for name, items in data | groupby('name') %}
+          <tr class="group-header" data-group="{{ name }}">
+            <td colspan="2">
+              <span class="expand-icon">&#9654;</span>
+              {{ name }}
+            </td>
+          </tr>
+          {% for item in items %}
+            <tr class="group-rows {% if loop.last %}last-row{% endif %}" data-group="{{ name }}">
+              <td></td>
+              <td>{{ item.player }}</td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </form>
+
+  <script>
+    const groupHeaders = document.querySelectorAll('.group-header');
+
+    groupHeaders.forEach(header => {
+      header.addEventListener('click', () => {
+        const groupName = header.dataset.group;
+        const groupRows = document.querySelectorAll(`tr.group-rows[data-group="${groupName}"]`);
+        const expandIcon = header.querySelector('.expand-icon');
+
+        groupRows.forEach(row => {
+          row.classList.toggle('expanded');
+        });
+
+        if (expandIcon.innerHTML === '►') {
+          expandIcon.innerHTML = '▼';
+        } else {
+          expandIcon.innerHTML = '►';
+        }
+      });
+    });
+
+    if (groupHeaders.length > 0) {
+        groupHeaders[0].click();
+    }
+  </script>
+    <style>
+    .group-rows {
+        display: none;
+    }
+    .group-rows.expanded {
+        display: table-row;
+    }
+    /* Corrected CSS selector */
+    tr.last-row {
+      background-color: lightgray;
+    }
+  </style>
+{% endblock %}

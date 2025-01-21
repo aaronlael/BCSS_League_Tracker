@@ -263,6 +263,7 @@ def wrap_up(current_date):
             SELECT name, tag_out, place, payout_dollars
             FROM BCSS_Players
             WHERE date = %s
+            ORDER BY place ASC
         """
         mycursor.execute(sql, (date_object,))
         results = mycursor.fetchall()
@@ -281,3 +282,94 @@ def wrap_up(current_date):
         if mydb and mydb.is_connected():
             mydb.close()
 
+
+def get_ctp(date_str, ctp: int) -> tuple:
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return None, error_message
+
+    try:
+        mycursor = mydb.cursor()
+        sql = """SELECT name, id FROM BCSS_CTPS
+            WHERE date = %s AND ctp_number = %s
+            ORDER BY id DESC"""
+
+        # Convert the date string to a datetime.date object for proper comparison
+        try:
+            date_object = dt.datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            return None, "Invalid date format. Please use YYYY-MM-DD."
+
+        mycursor.execute(sql, (date_object, ctp))  # Use a tuple for parameter binding
+        results = mycursor.fetchall()
+        return results, None
+    except mysql.connector.Error as err:
+        print(f"Error retrieving players: {err}")
+        return None, str(err)
+    finally:
+        if mydb and mydb.is_connected():
+            mycursor.close()
+            mydb.close()
+
+def add_ctp(player: str, ctp: int, date_str: str) -> tuple:
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        return False, error_message
+
+    try:
+        mycursor = mydb.cursor()
+        sql = """
+            INSERT INTO BCSS_CTPS (date, name, ctp_number)
+            VALUES (%s, %s, %s)
+        """
+        val = (
+            dt.datetime.strptime(date_str, "%Y-%m-%d").date(),
+            player,
+            ctp
+        )
+        mycursor.execute(sql, val)
+        mydb.commit()
+        return True, None
+
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return False, str(err)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}") #catch any other errors
+        return False, str(e)
+    finally:
+        if mycursor:
+            mycursor.close()
+        if mydb and mydb.is_connected():
+            mydb.close()
+
+
+def get_ctp_wrap(date_str) -> tuple:
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return None, error_message
+
+    try:
+        mycursor = mydb.cursor()
+        sql = """SELECT name, ctp_number, id FROM BCSS_CTPS
+            WHERE date = %s
+            ORDER BY ctp_number ASC, id DESC"""
+
+        # Convert the date string to a datetime.date object for proper comparison
+        try:
+            date_object = dt.datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            return None, "Invalid date format. Please use YYYY-MM-DD."
+
+        mycursor.execute(sql, (date_object,))  # Use a tuple for parameter binding
+        results = mycursor.fetchall()
+        return results, None
+    except mysql.connector.Error as err:
+        print(f"Error retrieving players: {err}")
+        return None, str(err)
+    finally:
+        if mydb and mydb.is_connected():
+            mycursor.close()
+            mydb.close()

@@ -1,4 +1,5 @@
 from db import get_players_to_pay, pay_player
+import math
 
 def get_curves_value(positions: int, place: int) -> float:
     return 0.52430132 * (positions * place) ** -0.477
@@ -11,7 +12,7 @@ def get_curves_sum(positions: int) -> float:
 
 def payouts(player_count: int) -> list:
     payout = []
-    positions = round(player_count * 0.45)
+    positions = int(math.ceil(player_count * 0.45))
     curves_sum = get_curves_sum(positions)
     for i in range(1, positions + 1):
         payout.append(round((player_count * 2) * get_curves_value(positions, i) / curves_sum))

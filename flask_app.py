@@ -6,11 +6,13 @@ from flask import Flask, flash, render_template, request, redirect, Response, ur
 import os
 import pytz
 from payout import payout_manager
+from udisc_scrape import scrape_results_page
 
 app = Flask(__name__)
 app.secret_key = os.getenv("secret_key")
 USERNAME =os.getenv("site_user")
 PASSWORD = os.getenv("site_pw")
+tz =pytz.timezone('America/Denver')
 
 def check_auth(username, password):
     """Checks if the provided username and password are valid."""
@@ -74,13 +76,60 @@ def inputUser():
     else:
         return render_template("input.html")
 
-@app.route('/data', methods=["GET", "POST"])
-def data_parse():
-    if request.method == "POST":
-        pass
-    else:
-        return render_template("dataparse.html")
 
+@app.route('/newscoreentry', methods=["GET", "POST"])
+@requires_auth
+def new_score_entry():
+    # participants from entry form today
+    participants = []
+    results = get_players(dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d"))
+    if results[0]:
+        for result in results[0]:
+            player = {
+                "id" : result[0],
+                "name" : result[1],
+                "place" : None
+                }
+            participants.append(player)
+    # Udisc Results today
+    scraped_results = scrape_results_page()
+    scraped_data = []
+    for sr in scraped_results:
+        if "T" in sr[0]:
+            player = {
+            "name" : sr[1],
+            "place" : sr[0][1:]
+            }
+        else:
+            player = {
+                "name" : sr[1],
+                "place" : sr[0]
+                }
+        scraped_data.append(player)
+    if request.method == "POST":
+        updated_data = []
+        for i in range(len(participants)):
+            new_value = request.form.get(f"value_{i}")
+            participant = list(filter(lambda participant: str(participant['id']) == str(new_value), participants))[0]
+            participant['name'] = scraped_data[i]['name']
+            participant['place'] = scraped_data[i]['place']
+            updated_data.append(participant)
+        upd = update_player_place(updated_data)
+        if upd[0]:
+            upd_tag = update_tag_out(dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d"))
+            if not upd_tag[0]:
+                return upd_tag[1]
+        pay = payout_manager(dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d"))
+        if not pay[0]:
+            return pay[1]
+        return redirect(url_for("wrap_up_view"))
+
+    else:
+        data = {
+            'participants' : participants,
+            'scraped_data' : scraped_data
+            }
+        return render_template("new_entry.html", data=data)
 
 @app.route('/scoreentry', methods=["GET", "POST"])
 @requires_auth
@@ -180,6 +229,8 @@ def ctp_wrap_up():
             data_list.append({"name": record[1], "player": record[0]})
         return render_template("ctpwrap.html", data=data_list)
 
-
+@app.route('/ctpstub')
+def ctp_stub():
+    return render_template("ctpstub.html")
 
 

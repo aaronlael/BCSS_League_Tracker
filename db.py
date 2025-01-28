@@ -106,13 +106,14 @@ def update_player_place(player_updates):
         for player in player_updates:
             player_id = player.get("id")
             player_place = player.get("place")
+            player_name = player.get("name")
 
             if player_id is None or player_place is None:
                 print("Error: Player data missing 'id' or 'place'.")
                 return False, "Player data missing 'id' or 'place'."
 
-            sql = "UPDATE BCSS_Players SET place = %s WHERE id = %s"
-            val = (player_place, player_id)
+            sql = "UPDATE BCSS_Players SET place = %s, name = %s WHERE id = %s"
+            val = (player_place, player_name, player_id)
             mycursor.execute(sql, val)
 
         mydb.commit()  # Commit changes after all updates
@@ -355,7 +356,7 @@ def get_ctp_wrap(date_str) -> tuple:
         mycursor = mydb.cursor()
         sql = """SELECT name, ctp_number, id FROM BCSS_CTPS
             WHERE date = %s
-            ORDER BY ctp_number ASC, id DESC"""
+            ORDER BY ctp_number ASC, id ASC"""
 
         # Convert the date string to a datetime.date object for proper comparison
         try:

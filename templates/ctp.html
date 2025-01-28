@@ -2,28 +2,22 @@
 
 {% block content %}
 
-    <h1>CTP Holder</h1>
+<div class="container">
+  <div class="p-3">
+    <h1>Current CTP {{data[0].ctp}} Holder</h1>
+    {% if data[0].name == "Open" %}
+      <p>Currently, no one has taken <strong>CTP {{data[0].ctp}} yet.</strong></p>
+    {% else %}
+      <p>Currently, <strong>{{ data[0].name }}</strong> has the flag for <strong>CTP {{ data[0].ctp }}</strong>.</p>
+    {% endif %}
 
-    <form method="POST">
-        <table border="1">
-            <thead>
-                <tr><th>id</th>
-                    <th>Player</th>
-                    <th>CTP</th>
-                    <th>New Player</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in data %}
-                <tr><td>{{ item.id }}</td>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.ctp }}</td>
-                    <td><input type="text" name="new_name" id="new_name" required></td>
-                    <input type="hidden" name="ctp" value="{{ item.ctp }}">
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <input type="submit" value="Submit">
+    <form method="POST" class="form-group">
+      <label for="new_name">Enter your name to claim CTP {{ data[0].ctp }}:</label>
+      <input type="text" name="new_name" id="new_name" class="form-control" required>
+      <div class="p-2"></div>
+      <button type="submit" class="btn btn-primary">Claim CTP</button>
     </form>
+  </div>
+</div>
+
 {% endblock %}

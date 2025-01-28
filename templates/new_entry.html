@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <form method="POST">
+        <p>Enter the DB id of the player to the right of the correct player from UDisc.</p>
+        <table>
+            <thead>
+                <tr><th>Place</th>
+                    <th>Udisc Player</th>
+                    <th>id</th>
+                    <th>Player</th>
+                    <th>DB id</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(data['participants']|length) %}
+                <tr></tr>
+                    <td>{{ data['scraped_data'][i].place }}</td>
+                    <td>{{ data['scraped_data'][i].name }}</td>
+                    <td><input type="number" name="value_{{ i }}" required></td>
+                    <td>{{ data['participants'][i].name }}</td>
+                    <td>{{ data['participants'][i].id }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit">Update Values</button>
+    </form>
+
+{% endblock %}

@@ -8,10 +8,8 @@ def scrape_results_page() -> list:
     r = requests.get(URL)
     soup = BeautifulSoup(r.content, 'html.parser')
     s = soup.find('a', class_="text-link group flex flex-col items-center gap-2 hover:no-underline md:flex-row border-divider hover:bg-bg-accent1 mt-1 rounded-lg border px-2 pb-3 pt-1")
-    event_url = "https://udisc.com" + s['href'] + "/leaderboard?round=1"
+    event_url = "https://udisc.com" + s['href'] + "?round=1"
 
-    # testing
-    event_url = "https://udisc.com" + "/events/breaking-chains-sober-sundays-breaking-chains-sober-sundays-Lz7cUA" + "/leaderboard?round=1"
 
     # get event results
     r = requests.get(event_url)

@@ -187,7 +187,6 @@ def wrap_up_view():
 def ctp_entry(ctp):
     if request.method == "POST":
         name = request.form.get("new_name")
-        ctp = request.form.get("ctp")
         ctp_update, error = add_ctp(name, ctp, dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d"))
         if error:
             return error

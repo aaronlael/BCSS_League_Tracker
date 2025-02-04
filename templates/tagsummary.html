@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>Current Tag Holders</h1>
+
+    <form method="POST">
+        <table class="table" border=1>
+            <thead>
+                <tr><th>Player</th>
+                    <th>Current Tag</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr>
+                    <td><a href=/tagsummary/player/{{ item.name | replace(" ", "_") }}>{{ item.name }}</a></td>
+                    <td><a href=/tagsummary/tag/{{ item.tag }}>{{ item.tag }}</a></td>
+                    <td>{{ item.date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+{% endblock %}

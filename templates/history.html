@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>Historical Tag Info</h1>
+
+    <form method="POST">
+        <table class="table" border="1">
+            <thead>
+                <tr><th>Player</th>
+                    <th>History</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.tag }}</td>
+                    <td>{{ item.date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+{% endblock %}

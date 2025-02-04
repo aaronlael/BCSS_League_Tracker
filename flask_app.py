@@ -1,7 +1,7 @@
 
 # A very simple Flask Hello World app for you to get started with...
 import datetime as dt
-from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, update_player_place, update_tag_out, wrap_up
+from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up
 from flask import Flask, flash, render_template, request, redirect, Response, url_for
 import os
 import pytz
@@ -215,7 +215,7 @@ def ctp_entry(ctp):
 
 
 
-@app.route('/ctpwrap')
+@app.route('/ctpwrap', methods=["GET"])
 @requires_auth
 def ctp_wrap_up():
     today = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")
@@ -228,8 +228,48 @@ def ctp_wrap_up():
             data_list.append({"name": record[1], "player": record[0]})
         return render_template("ctpwrap.html", data=data_list)
 
-@app.route('/ctpstub')
+@app.route('/ctpstub', methods=["GET"])
 def ctp_stub():
     return render_template("ctpstub.html")
+
+
+@app.route('/tagsummary', methods=["GET"])
+@requires_auth
+def tag_summary():
+    tag_data, error = get_tag_holders()
+    if error:
+        return error
+    else:
+        tag_view_data = []
+        for td in tag_data:
+            tag_view_data.append({"name" : td[0], "tag" : td[1], "date" : td[2]})
+        return render_template("tagsummary.html", data=tag_view_data)
+
+
+@app.route('/tagsummary/player/<player>', methods=["GET"])
+@requires_auth
+def tag_summary_player(player):
+    player = player.replace("_", " ")
+    tag_data, error = get_player_history(player)
+    if error:
+        return error
+    else:
+        tag_view_data = []
+        for td in tag_data:
+            tag_view_data.append({"name" : td[0], "tag" : td[1], "date" : td[2]})
+        return render_template("history.html", data=tag_view_data)
+
+
+@app.route('/tagsummary/tag/<tag>', methods=["GET"])
+@requires_auth
+def tag_summary_tag(tag):
+    tag_data, error = get_tag_history(tag)
+    if error:
+        return error
+    else:
+        tag_view_data = []
+        for td in tag_data:
+            tag_view_data.append({"name" : td[0], "tag" : td[1], "date" : td[2]})
+        return render_template("history.html", data=tag_view_data)
 
 

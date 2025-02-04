@@ -374,3 +374,63 @@ def get_ctp_wrap(date_str) -> tuple:
         if mydb and mydb.is_connected():
             mycursor.close()
             mydb.close()
+
+
+def get_tag_holders() -> list:
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return None, error_message
+
+    try:
+        mycursor = mydb.cursor()
+        sql = """select t1.name, t1.tag_out, t1.date from BCSS_Players t1
+        Where t1.date = (select MAX(t2.date) From BCSS_Players t2
+            WHERE t2.name = t1.name)
+        and t1.tag_out is not null
+        ORDER BY tag_out ASC;"""
+
+        mycursor.execute(sql)  # Use a tuple for parameter binding
+        results = mycursor.fetchall()
+        return results, None
+    except mysql.connector.Error as err:
+        return None, err
+
+
+
+def get_tag_history(tag) -> list:
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return None, error_message
+
+    try:
+        mycursor = mydb.cursor()
+        sql = """select name, tag_out, date from BCSS_Players
+        WHERE tag_out = %s
+        ORDER BY date DESC"""
+
+        mycursor.execute(sql, (tag,))  # Use a tuple for parameter binding
+        results = mycursor.fetchall()
+        return results, None
+    except mysql.connector.Error as err:
+        return None, err
+
+
+def get_player_history(player) -> list:
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return None, error_message
+
+    try:
+        mycursor = mydb.cursor()
+        sql = """select name, tag_out, date from BCSS_Players
+        WHERE name = %s
+        ORDER BY date DESC"""
+
+        mycursor.execute(sql, (player,))  # Use a tuple for parameter binding
+        results = mycursor.fetchall()
+        return results, None
+    except mysql.connector.Error as err:
+        return None, err

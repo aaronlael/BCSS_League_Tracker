@@ -26,12 +26,9 @@ App to Track the Breaking Chains Sober Sundays disc golf league
    
 
  To do's
- * Tag movement page
-   * select a player to see all the tags they've held in the season in order - done
-   * select a tag to see all the players who have held it in order - done
-   * see a list of current tags with their current holder - done
-   * Add csv export of round data for visualization
-     * enhance scraping from Udisc to collect full round details for players
-     * add weather, time, conditions details
-     * track things like tag delta from start to end of round
-   * track ace pot? 
+  * Registered player summary for day of review
+    * columns for id, name, tag in, pay in, ctp, ace pot values
+    * ids are links to a user edit page by id to update values/delete registration.
+  * track ace pot value on registration page
+    * on leage review page add button to cash out ace pot with confirmation
+   

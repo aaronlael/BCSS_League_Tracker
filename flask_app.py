@@ -1,7 +1,5 @@
-
-# A very simple Flask Hello World app for you to get started with...
 import datetime as dt
-from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up
+from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up, get_players_detailed, delete_player
 from flask import Flask, flash, render_template, request, redirect, Response, url_for
 import os
 import pytz
@@ -271,5 +269,35 @@ def tag_summary_tag(tag):
         for td in tag_data:
             tag_view_data.append({"name" : td[0], "tag" : td[1], "date" : td[2]})
         return render_template("history.html", data=tag_view_data)
+
+
+@app.route('/editplayers', methods=["GET"])
+@requires_auth
+def day_of_review():
+    today = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")
+    players, error = get_players_detailed(today)
+    if error:
+        return error
+    else:
+        return render_template('edit_players.html', data=players)
+
+
+
+@app.route('/delete_player/<id>', methods=["POST"])
+@requires_auth
+def delete_registered_player(id):
+    player_name = request.form.get("name")
+    if player_name:
+        delete_player(id)
+        flash(f"Player {player_name} has been deleted!")
+    else:
+        flash(f"You passed a null player, oopsie!")
+    return redirect(url_for("day_of_review"))
+
+
+
+
+
+
 
 

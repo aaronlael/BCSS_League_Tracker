@@ -8,6 +8,15 @@ App to Track the Breaking Chains Sober Sundays disc golf league
     * The LD puts the right LD next to the right user from the UDisc results
       * This serves two functions: updating names to match udisc for consistency and assigning player place
     * This kicks off tag calculation and payout calculation
+    * Redirects to results when completed
+  * Delete User
+    * Review screen for registered users with what they opted in for and what tag
+    * Delete a user if wrong and re-enter.
+    * Flashes message to confirm deletion or error.
+  * Backup Score Entry
+    * Enter places next to registered players.
+    * This is a backup for if the udisc scrape fails.
+    * This is a temporary resolution, the scrape issue should be resolved day of and New Score Entry should be ran to keep names consistent.
   * Results
      * Tabular results based off of score entry
   * CTP Wrapup
@@ -26,9 +35,6 @@ App to Track the Breaking Chains Sober Sundays disc golf league
    
 
  To do's
-  * Registered player summary for day of review
-    * columns for id, name, tag in, pay in, ctp, ace pot values
-    * ids are links to a user edit page by id to update values/delete registration.
   * track ace pot value on registration page
     * on leage review page add button to cash out ace pot with confirmation
    

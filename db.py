@@ -129,8 +129,6 @@ def update_player_place(player_updates):
             mydb.close()
 
 
-
-
 def update_tag_out(date_str):
     mydb, error_message = connect_to_mysql()
     if error_message:
@@ -434,3 +432,49 @@ def get_player_history(player) -> list:
         return results, None
     except mysql.connector.Error as err:
         return None, err
+
+def get_players_detailed(date_str) -> tuple:
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return None, error_message
+
+    try:
+        mycursor = mydb.cursor(dictionary=True)
+        sql = "SELECT id, name, tag_in, payout_in, CTP1, CTP2, ace_pot FROM BCSS_Players WHERE date = %s"
+
+        # Convert the date string to a datetime.date object for proper comparison
+        try:
+            date_object = dt.datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            return None, "Invalid date format. Please use YYYY-MM-DD."
+
+        mycursor.execute(sql, (date_object,))  # Use a tuple for parameter binding
+        results = mycursor.fetchall()
+        return results, None
+    except mysql.connector.Error as err:
+        print(f"Error retrieving players: {err}")
+        return None, str(err)
+    finally:
+        if mydb and mydb.is_connected():
+            mycursor.close()
+            mydb.close()
+
+def delete_player(id: int) -> None:
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return None, error_message
+
+    try:
+        mycursor = mydb.cursor()
+        sql = "DELETE FROM BCSS_Players WHERE id = %s"
+        mycursor.execute(sql, (id,))
+        mydb.commit()
+    except mysql.connector.Error as err:
+        print(f"Error retrieving players: {err}")
+        return None, str(err)
+    finally:
+        if mydb and mydb.is_connected():
+            mycursor.close()
+            mydb.close()

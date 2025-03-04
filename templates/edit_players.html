@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>Player</th>
+                <th>Tag</th>
+                <th>Payout</th>
+                <th>CTP1</th>
+                <th>CTP2</th>
+                <th>Ace Pot</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data %}
+                <tr><form method="POST" action="delete_player/{{ item.id }}">
+                        <td>{{ item.id }}</td>
+                        <td><input type="hidden" name="name" value="{{ item.name }}">
+                            {{ item.name }}</td>
+                        <td>{{ item.tag_in }}</td>
+                        <td>{{ item.payout_in }}</td>
+                        <td>{{ item.CTP1 }}</td>
+                        <td>{{ item.CTP2 }}</td>
+                        <td>{{ item.ace_pot }}</td>
+                        <td>
+                         <button type="submit">Delete</button>
+                        </td>
+                        </form>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

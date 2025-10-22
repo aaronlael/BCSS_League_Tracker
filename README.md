@@ -35,6 +35,14 @@ App to Track the Breaking Chains Sober Sundays disc golf league
    
 
  To do's
+  * season reset functionality/create new league
+  * implement endpoints for 2026 bag tag qr codes
+    * tag activity table to provide tag history data for endpoint
+  * ui updates to make more approachable
+  * add season points for round finishers
+  * autocomplete/user list for registration page to keep consistent users
+    * abstract users from round statistics to allow for static users for a season for easier tracking/autocomplete lists and matching udisc names
+  * update webscraper to pull in score for tag stats
   * track ace pot value on registration page
     * on leage review page add button to cash out ace pot with confirmation
    

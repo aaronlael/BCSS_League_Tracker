@@ -1,14 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 
-def scrape_results_page() -> list:
-
-    # get event URL from league events page
-    URL = "https://udisc.com/leagues/breaking-chains-sober-sundays-t0YwuH/schedule"
-    r = requests.get(URL)
-    soup = BeautifulSoup(r.content, 'html.parser')
-    s = soup.find('a', class_="text-link group flex flex-col items-center gap-2 hover:no-underline md:flex-row border-divider hover:bg-bg-accent1 mt-1 rounded-lg border px-2 pb-3 pt-1")
-    event_url = "https://udisc.com" + s['href'] + "?round=1"
+def scrape_results_page(url_code: str) -> list:
+    event_url = url_code
 
 
     # get event results
@@ -27,7 +21,7 @@ def scrape_results_page() -> list:
     for player in data:
         if len(player) > 0:
             if player[3] != "":
-                player_out.append((player[0], player[1]))
+                player_out.append((player[0], player[1], player[-1]))
             else:
-                player_out.append(("666", player[1]))
+                player_out.append(("666", player[1], "666"))
     return player_out

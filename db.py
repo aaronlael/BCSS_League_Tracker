@@ -107,13 +107,14 @@ def update_player_place(player_updates):
             player_id = player.get("id")
             player_place = player.get("place")
             player_name = player.get("name")
+            player_score = player.get("score")
 
             if player_id is None or player_place is None:
                 print("Error: Player data missing 'id' or 'place'.")
                 return False, "Player data missing 'id' or 'place'."
 
-            sql = "UPDATE BCSS_Players SET place = %s, name = %s WHERE id = %s"
-            val = (player_place, player_name, player_id)
+            sql = "UPDATE BCSS_Players SET place = %s, name = %s, score = %s WHERE id = %s"
+            val = (player_place, player_name, player_score, player_id)
             mycursor.execute(sql, val)
 
         mydb.commit()  # Commit changes after all updates
@@ -266,6 +267,10 @@ def wrap_up(current_date):
         """
         mycursor.execute(sql, (date_object,))
         results = mycursor.fetchall()
+
+        #insert new users into the BCSS_Individuals table
+        user_list = [row['name'] for row in results]
+        insert_users_into_individuals(user_list)
 
         return results, None
 
@@ -477,4 +482,106 @@ def delete_player(id: int) -> None:
     finally:
         if mydb and mydb.is_connected():
             mycursor.close()
+            mydb.close()
+
+
+
+def return_users_from_individuals() -> tuple:
+    """return a list of unique udisc_name values from the db for
+    autocomplete purposes"""
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return False, error_message
+    SELECT_SQL = "SELECT individual_udisc_name FROM BCSS_Individuals"
+    user_list = []
+
+    try:
+        mycursor = mydb.cursor()
+        mycursor.execute(SELECT_SQL)
+        results = mycursor.fetchall()
+        user_list = [row[0] for row in results]
+        return user_list, None
+
+    except mysql.connector.Error as err:
+        error_msg = f"Database error occurred during user retrieval: {err}"
+        print(error_msg)
+        return [], error_msg
+
+    finally:
+        if mycursor:
+            mycursor.close()
+        if mydb and mydb.is_connected():
+            mydb.close()
+
+def insert_users_into_individuals(users) -> tuple:
+    """take returned values from udisc webscraping of user names and insert them into the
+    BCSS_individuals table if they are not already present"""
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return False, error_message
+    INSERT_IGNORE_SQL = "INSERT IGNORE INTO BCSS_Individuals (individual_udisc_name) VALUES (%s)"
+
+    try:
+        mycursor = mydb.cursor()
+        data_to_insert = [(user,) for user in users]
+        mycursor.executemany(INSERT_IGNORE_SQL, data_to_insert)
+        mydb.commit()
+        return True, None #return success and no error
+
+    except mysql.connector.Error as err:
+        print(f"Error inserting player: {err}")
+        mydb.rollback() #rollback on error
+        return False, str(err)
+
+    finally:
+        if mydb and mydb.is_connected():
+            mycursor.close()
+            mydb.close()
+
+def get_player_stats_by_tag(year, tag):
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return False, error_message
+    sql_query = """
+        SELECT
+            name,
+            date,
+            score,
+            place
+        FROM
+            BCSS_Players
+        WHERE
+            tag_out = %s
+            AND year(date) = %s
+        ORDER BY
+            date DESC;
+    """
+    # Use a tuple for the values to be substituted into the query
+    # The date LIKE value needs the wildcard appended for the query
+    data_to_pass = (tag, year)
+    results = []
+
+    try:
+        # Use a dictionary cursor to get results as dictionaries
+        mycursor = mydb.cursor(dictionary=True)
+        mycursor.execute(sql_query, data_to_pass)
+        results = mycursor.fetchall()
+
+        # Return the data and no error
+        return results, None
+
+    except mysql.connector.Error as err:
+        error_message = f"Error executing query: {err}"
+        print(error_message)
+        # Return False for data and the error message
+        return False, error_message
+
+    finally:
+        # Close the cursor and connection if they exist
+        if mycursor:
+            mycursor.close()
+        if mydb and mydb.is_connected():
             mydb.close()

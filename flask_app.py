@@ -1,6 +1,11 @@
+
+# A very simple Flask Hello World app for you to get started with...
+import ast
 import datetime as dt
-from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up, get_players_detailed, delete_player
-from flask import Flask, flash, render_template, request, redirect, Response, url_for
+from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up, get_players_detailed, delete_player, return_users_from_individuals, get_player_stats_by_tag
+from flask import Flask, flash, jsonify, render_template, request, redirect, Response, url_for
+from tag_history import analyze_tag_data
+from fuzzy_sort import fuzzy_sort_names
 import os
 import pytz
 from payout import payout_manager
@@ -10,6 +15,8 @@ app = Flask(__name__)
 app.secret_key = os.getenv("secret_key")
 USERNAME =os.getenv("site_user")
 PASSWORD = os.getenv("site_pw")
+TEST = True
+TEST_DAY_OFFSET = 4
 tz =pytz.timezone('America/Denver')
 
 def check_auth(username, password):
@@ -42,6 +49,10 @@ MOUNTAIN_TZ = pytz.timezone('America/Denver')
 @requires_auth
 def inputUser():
     if request.method == "POST":
+        if TEST:
+            dt_val = (dt.datetime.now(MOUNTAIN_TZ)-dt.timedelta(days=TEST_DAY_OFFSET)).strftime("%Y-%m-%d")
+        else:
+            dt_val = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")
         name = request.form.get("name")  # Get data from the form
         tag = request.form.get("tag")
         if tag:
@@ -53,7 +64,7 @@ def inputUser():
         ctp2 = request.form.get("ctp2") is not None
         ace_pot = request.form.get("ace_pot") is not None
         player = {
-            "date": dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d"),
+            "date": dt_val,
             "name": name,
             "tag_in": tag_number if tag_number else None,
             "tag_out": None,
@@ -78,9 +89,66 @@ def inputUser():
 @app.route('/newscoreentry', methods=["GET", "POST"])
 @requires_auth
 def new_score_entry():
+    global TEST, TEST_DAY_OFFSET
+    if request.method == "POST":
+        udisc_code = request.form.get("udisc_code")
+        if "https://udisc.com/events/" not in udisc_code:
+            flash("invalid URL entered")
+            return redirect(url_for("new_score_entry"))
+        # participants from entry form today
+        dt_val = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")
+        # previous day
+        if TEST:
+            dt_val = (dt.datetime.now(MOUNTAIN_TZ)-dt.timedelta(days=TEST_DAY_OFFSET)).strftime("%Y-%m-%d")
+        participants = []
+        results = get_players(dt_val)
+        if results[0]:
+            for result in results[0]:
+                player = {
+                    "id" : result[0],
+                    "name" : result[1],
+                    "place" : None
+                    }
+                participants.append(player)
+        # Udisc Results today
+        scraped_results = scrape_results_page(udisc_code)
+        scraped_data = []
+        for sr in scraped_results:
+            if "T" in sr[0]:
+                player = {
+                "name" : sr[1],
+                "place" : sr[0][1:],
+                "score" : sr[2]
+                }
+            else:
+                player = {
+                    "name" : sr[1],
+                    "place" : sr[0],
+                    "score" : sr[2]
+                    }
+            scraped_data.append(player)
+        # fuzzy sort logic
+
+        data = {
+            'participants' : participants,
+            'scraped_data' : scraped_data
+            }
+        sorted_data = fuzzy_sort_names(data)
+        return render_template("new_entry.html", data=sorted_data)
+
+    else:
+        return render_template("autoscore.html")
+
+@app.route('/scrapedscoreentry', methods=["POST"])
+@requires_auth
+def scraped_score_entry():
+    global TEST, TEST_DAY_OFFSET
     # participants from entry form today
     participants = []
-    results = get_players(dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d"))
+    dt_val = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")
+    if TEST:
+        dt_val = (dt.datetime.now(MOUNTAIN_TZ)-dt.timedelta(days=TEST_DAY_OFFSET)).strftime("%Y-%m-%d")
+    results = get_players(dt_val)
     if results[0]:
         for result in results[0]:
             player = {
@@ -89,45 +157,25 @@ def new_score_entry():
                 "place" : None
                 }
             participants.append(player)
-    # Udisc Results today
-    scraped_results = scrape_results_page()
-    scraped_data = []
-    for sr in scraped_results:
-        if "T" in sr[0]:
-            player = {
-            "name" : sr[1],
-            "place" : sr[0][1:]
-            }
-        else:
-            player = {
-                "name" : sr[1],
-                "place" : sr[0]
-                }
-        scraped_data.append(player)
-    if request.method == "POST":
-        updated_data = []
-        for i in range(len(participants)):
-            new_value = request.form.get(f"value_{i}")
-            participant = list(filter(lambda participant: str(participant['id']) == str(new_value), participants))[0]
-            participant['name'] = scraped_data[i]['name']
-            participant['place'] = scraped_data[i]['place']
-            updated_data.append(participant)
-        upd = update_player_place(updated_data)
-        if upd[0]:
-            upd_tag = update_tag_out(dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d"))
-            if not upd_tag[0]:
-                return upd_tag[1]
-        pay = payout_manager(dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d"))
-        if not pay[0]:
-            return pay[1]
-        return redirect(url_for("wrap_up_view"))
+    updated_data = []
+    scraped_data = ast.literal_eval(request.form.get("scraped_data"))
+    for i in range(len(participants)):
+        new_value = request.form.get(f"value_{i}")
+        participant = list(filter(lambda participant: str(participant['id']) == str(new_value), participants))[0]
+        participant['name'] = scraped_data[i]['name']
+        participant['place'] = scraped_data[i]['place']
+        participant['score'] = scraped_data[i]['score']
+        updated_data.append(participant)
+    upd = update_player_place(updated_data)
+    if upd[0]:
+        upd_tag = update_tag_out(dt_val)
+        if not upd_tag[0]:
+            return upd_tag[1]
+    pay = payout_manager(dt_val)
+    if not pay[0]:
+        return pay[1]
+    return redirect(url_for("wrap_up_view"))
 
-    else:
-        data = {
-            'participants' : participants,
-            'scraped_data' : scraped_data
-            }
-        return render_template("new_entry.html", data=data)
 
 @app.route('/scoreentry', methods=["GET", "POST"])
 @requires_auth
@@ -170,8 +218,12 @@ def place_entry():
 @app.route('/wrapup', methods=["GET"])
 @requires_auth
 def wrap_up_view():
+    global TEST, TEST_DAY_OFFSET
     # add logic to retrieve users and get payout data
-    data, err = wrap_up(dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d"))
+    dt_val = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")
+    if TEST:
+        dt_val = (dt.datetime.now(MOUNTAIN_TZ)-dt.timedelta(days=TEST_DAY_OFFSET)).strftime("%Y-%m-%d")
+    data, err = wrap_up(dt_val)
     if data:
         return render_template("postround.html", data=data)
     else:
@@ -274,8 +326,11 @@ def tag_summary_tag(tag):
 @app.route('/editplayers', methods=["GET"])
 @requires_auth
 def day_of_review():
-    today = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")
-    players, error = get_players_detailed(today)
+    if TEST:
+        dt_val = (dt.datetime.now(MOUNTAIN_TZ)-dt.timedelta(days=TEST_DAY_OFFSET)).strftime("%Y-%m-%d")
+    else:
+        dt_val = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")
+    players, error = get_players_detailed(dt_val)
     if error:
         return error
     else:
@@ -295,6 +350,31 @@ def delete_registered_player(id):
     return redirect(url_for("day_of_review"))
 
 
+@app.route('/tags/<year>/<tag>', methods=["GET"])
+def detailed_tag_data(year: str, tag: str):
+    data = get_player_stats_by_tag(year, tag)
+    stats = analyze_tag_data(data)
+    if not stats:
+        return f"<h1>No data found for Tag {tag} in {year}.</h1>"
+
+    return render_template(
+        'dashboard.html',
+        stats=stats,
+        tag_num=tag,
+        year=year
+    )
+
+
+
+@app.route('/individuals/autocomplete', methods=['GET'])
+def autocomplete():
+    search_term = request.args.get('term', '').lower()
+
+    user_list, user_list_flag = return_users_from_individuals()
+
+    suggestions = [user for user in user_list if search_term in user.lower()]
+
+    return jsonify(suggestions)
 
 
 

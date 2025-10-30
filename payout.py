@@ -2,7 +2,7 @@ from db import get_players_to_pay, pay_player
 import math
 
 def get_curves_value(positions: int, place: int) -> float:
-    return 0.52430132 * (positions * place) ** -0.477
+    return 0.52430132 * (positions * place) ** -0.7
 
 def get_curves_sum(positions: int) -> float:
     curves_sum = 0.0
@@ -16,9 +16,28 @@ def payouts(player_count: int) -> list:
     curves_sum = get_curves_sum(positions)
     for i in range(1, positions + 1):
         payout.append(round((player_count * 2) * get_curves_value(positions, i) / curves_sum))
+
+    if sum(payout) < (player_count * 2):
+        payout[0] += (player_count *2) - sum(payout)
     return payout
 
 
+def linear_payouts(player_count: int, entry_fee: float) -> list:
+    num_paid_places = int(math.ceil(player_count * 0.45))
+    total_pot = player_count * entry_fee
+    payouts_list = [0.0] * num_paid_places
+
+    if num_paid_places == 0:
+        return []
+
+    if num_paid_places > 0:
+        base_unit = total_pot / (num_paid_places * (num_paid_places + 1) / 2)
+
+        # Distribute payouts linearly (highest place gets num_paid_places units, etc.)
+        for i in range(num_paid_places):
+            payouts_list[i] = round(base_unit * (num_paid_places - i))
+
+    return payouts_list
 
 def payout_manager(current_date: str):
     player_place = {}

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tag #{{ tag_num }} Dashboard ({{ year }})</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .card { 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06); 
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); }
+        .tag-history-row:nth-child(odd) { background-color: #f9fafb; }
+        .tag-history-row:hover { background-color: #e5e7eb; }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">
+                Tag <span class="text-indigo-600">#{{ tag_num }}</span>
+            </h1>
+            <p class="text-xl text-gray-500">Ownership History for {{ year }}</p>
+        </header>
+
+        <!-- Current Owner & Summary Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            
+            <!-- Current Owner Card -->
+            <div class="card bg-white p-6 rounded-xl border border-indigo-200">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 12a.972.972 0 00-.972-.972h-18.056A.972.972 0 002 21.028v-1.056c0-2.327 1.954-4.281 4.281-4.281h11.438c2.327 0 4.281 1.954 4.281 4.281v1.056z"></path></svg>
+                    Current Owner
+                </h2>
+                <div class="space-y-3">
+                    <p class="text-3xl font-bold text-indigo-600">{{ stats.current_owner.name }}</p>
+                    <p class="text-sm text-gray-500">
+                        <!-- FIX: Use | string before | truncate to handle datetime.date objects -->
+                        <strong class="text-gray-700">Date Taken:</strong> {{ stats.current_owner.date_taken | string | truncate(length=16, killwords=True) }}
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        <strong class="text-gray-700">Place Earned:</strong> <span class="font-semibold text-green-600">#{{ stats.current_owner.place_earned }}</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Summary Stats Card -->
+            <div class="card bg-white p-6 rounded-xl border border-gray-200">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0v-5a2 2 0 012-2h2a2 2 0 012 2v5m-6 0h4"></path></svg>
+                    Summary Stats
+                </h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-4xl font-bold text-gray-900">{{ stats.summary.rounds_active }}</p>
+                        <p class="text-sm text-gray-500">Rounds Active</p>
+                    </div>
+                    <div>
+                        <p class="text-4xl font-bold text-gray-900">{{ stats.summary.total_strokes }}</p>
+                        <p class="text-sm text-gray-500">Total Strokes (Tag)</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- History Table -->
+        <div class="card bg-white p-6 rounded-xl border border-gray-200 overflow-x-auto">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Ownership History
+            </h2>
+            
+            <div class="inline-block min-w-full align-middle">
+                <div class="overflow-hidden border border-gray-200 sm:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner / Holder</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Place</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for record in stats.history %}
+                            <tr class="tag-history-row {% if record.is_current %} bg-indigo-50 font-bold {% endif %}">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                    <!-- FIX: Use | string before | truncate to handle datetime.date objects -->
+                                    {{ record.date | string | truncate(length=16, killwords=True) }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                    <span class="{% if record.is_new_holder %} text-indigo-700 {% else %} text-gray-900 {% endif %}">
+                                        {{ record.name }}
+                                    </span>
+                                    {% if record.is_current %}
+                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                            Current
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ record.score }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-green-600 font-semibold">#{{ record.place }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+
+    </div>
+</body>
+</html>

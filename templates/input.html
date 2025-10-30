@@ -1,9 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
+    <style>
+        /* Optional basic styling for the demo */
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .ui-autocomplete { z-index: 1000; } /* Ensures the menu is above other elements */
+    </style>
     <h1>User Signin</h1>
 
-    <form action="#" method="post">  <label for="name">Name:</label><br>
+    <form action="#" method="post" id="userForm">  <label for="name">Name:</label><br>
         <input type="text" id="name" name="name" required><br><br>
 
         <label for="tag">tag:</label>
@@ -26,5 +31,32 @@
 
         <input type="submit" value="Submit">
     </form>
+    <script>
+        document.getElementById('userForm').addEventListener('submit', function(event) {
+            const tagNumber = document.getElementById('tagNumber').value;
+            const tagChecked = document.getElementById('tag').checked;
 
+            if (tagNumber && !tagChecked) {
+                alert('Warning: Tag number is entered, but the tag is not checked.');
+                event.preventDefault(); // Prevent form submission
+            }
+            if (tagChecked && !tagNumber) {
+                alert('Warning:  Please enter a tag number if tag is checked.');
+                event.preventDefault();
+            }
+
+        });
+    </script>
+    <script>
+        // === Autocomplete JavaScript Logic ===
+        $(function() {
+            // Target the input field by its ID
+            $("#name").autocomplete({
+                // The source is our Flask JSON endpoint
+                source: "/individuals/autocomplete",
+                minLength: 2, // Start searching after 2 characters are typed
+                delay: 500    // Wait 500ms before querying the server
+            });
+        });
+    </script>
 {% endblock %}

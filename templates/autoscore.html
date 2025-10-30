@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <form method="POST">
+        <table>
+            <thead>
+                <tr><th>udisc event code</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" name="udisc_code" required></td>
+                </tr>
+            </tbody>
+        </table>
+        <button type="submit">Update Values</button>
+    </form>
+
+{% endblock %}

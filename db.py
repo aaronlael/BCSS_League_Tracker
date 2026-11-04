@@ -491,18 +491,26 @@ def delete_player(id: int) -> None:
 
 
 def return_users_from_individuals() -> tuple:
-    """return a list of unique udisc_name values from the db for
-    autocomplete purposes"""
+    """Return unique player names ordered by most recent league activity."""
     mydb, error_message = connect_to_mysql()
     if error_message:
         print(f"Database connection issue: {error_message}")
         return False, error_message
-    SELECT_SQL = "SELECT individual_udisc_name FROM BCSS_Individuals"
     user_list = []
 
     try:
         mycursor = mydb.cursor()
-        mycursor.execute(SELECT_SQL)
+        mycursor.execute("""
+            SELECT i.individual_udisc_name
+            FROM BCSS_Individuals i
+            LEFT JOIN BCSS_Players p
+                ON p.name = i.individual_udisc_name
+            GROUP BY i.individual_udisc_name
+            ORDER BY
+                MAX(p.date) IS NULL ASC,
+                MAX(p.date) DESC,
+                i.individual_udisc_name ASC
+        """)
         results = mycursor.fetchall()
         user_list = [row[0] for row in results]
         return user_list, None

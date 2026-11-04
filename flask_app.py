@@ -399,11 +399,13 @@ def display_handicaps():
 
 @app.route('/individuals/autocomplete', methods=['GET'])
 def autocomplete():
-    search_term = request.args.get('term', '').lower()
+    search_term = request.args.get('term', '').casefold()
 
-    user_list, user_list_flag = return_users_from_individuals()
+    user_list, error = return_users_from_individuals()
+    if error:
+        return jsonify({"error": error}), 500
 
-    suggestions = [user for user in user_list if search_term in user.lower()]
+    suggestions = [user for user in user_list if search_term in user.casefold()]
 
     return jsonify(suggestions)
 
@@ -411,7 +413,6 @@ def autocomplete():
 @app.route('/punishment', methods=['GET'])
 def chooser():
     return jsonify(punishment())
-
 
 
 

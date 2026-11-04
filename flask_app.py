@@ -1,8 +1,7 @@
-
-# A very simple Flask Hello World app for you to get started with...
 import ast
 import datetime as dt
-from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up, get_players_detailed, delete_player, return_users_from_individuals, get_player_stats_by_tag
+from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up, get_players_detailed, delete_player, return_users_from_individuals, get_player_stats_by_tag, get_scoreboard_url, get_todays_player_handicaps
+from disc_choice import punishment
 from flask import Flask, flash, jsonify, render_template, request, redirect, Response, url_for
 from tag_history import analyze_tag_data
 from fuzzy_sort import fuzzy_sort_names
@@ -15,7 +14,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("secret_key")
 USERNAME =os.getenv("site_user")
 PASSWORD = os.getenv("site_pw")
-TEST = True
+TEST = False
 TEST_DAY_OFFSET = 4
 tz =pytz.timezone('America/Denver')
 
@@ -137,7 +136,12 @@ def new_score_entry():
         return render_template("new_entry.html", data=sorted_data)
 
     else:
-        return render_template("autoscore.html")
+        dt_val = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")
+        url, error = get_scoreboard_url(dt_val)
+        if error:
+            flash(error)
+        data = {'url': url }
+        return render_template("autoscore.html", data=data)
 
 @app.route('/scrapedscoreentry', methods=["POST"])
 @requires_auth
@@ -364,6 +368,33 @@ def detailed_tag_data(year: str, tag: str):
         year=year
     )
 
+@app.route('/handicaps/today')
+def display_handicaps():
+    # Call the imported function directly
+    players, error = get_todays_player_handicaps()
+
+    if error:
+        return jsonify({"error": error}), 500
+
+    processed_handicaps = []
+
+    for player in players:
+        raw_diff = player['adjusted_score']
+        distance_feet = 0
+
+        # Logic: 1-10 is 1ft each; 11+ is 3ft each
+        if raw_diff > 0:
+            distance_feet = raw_diff
+
+
+        processed_handicaps.append({
+            "name": player['name'],
+            "score_diff": raw_diff,
+            "handicap": f"{distance_feet} ft"
+        })
+
+    return render_template('handicaps.html', players=processed_handicaps)
+
 
 
 @app.route('/individuals/autocomplete', methods=['GET'])
@@ -375,6 +406,11 @@ def autocomplete():
     suggestions = [user for user in user_list if search_term in user.lower()]
 
     return jsonify(suggestions)
+
+
+@app.route('/punishment', methods=['GET'])
+def chooser():
+    return jsonify(punishment())
 
 
 

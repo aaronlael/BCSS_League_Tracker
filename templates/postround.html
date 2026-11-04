@@ -1,28 +1,56 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="max-w-4xl mx-auto space-y-4 px-2 sm:px-0">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Tags & Payout Results</h1>
+            <p class="text-xs sm:text-sm text-slate-500">Final positions, tags awarded, and payouts.</p>
+        </div>
+    </div>
 
-    <h1>Tags and Payout Results</h1>
-
-    <form method="POST">
-        <table border="1">
-            <thead>
-                <tr><th>Player</th>
-                    <th>Place</th>
-                    <th>Tag Out</th>
-                    <th>Payout</th>
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <table class="w-full text-left text-xs sm:text-sm text-slate-600 table-fixed">
+            <thead class="bg-slate-50 border-b border-slate-200 font-semibold text-slate-500 uppercase tracking-wider text-[10px] sm:text-xs">
+                <tr>
+                    <th scope="col" class="w-[12%] sm:w-[15%] py-3 px-1.5 sm:px-4 text-center">Pl.</th>
+                    <th scope="col" class="w-[48%] sm:w-[45%] py-3 px-2 sm:px-4">Player</th>
+                    <th scope="col" class="w-[20%] py-3 px-1 sm:px-4 text-center">Tag Out</th>
+                    <th scope="col" class="w-[20%] py-3 px-2 sm:px-4 text-right">Payout</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-slate-100">
                 {% for item in data %}
-                <tr>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.place }}</td>
-                    <td>{{ item.tag_out }}</td>
-                    <td>{{ item.payout_dollars }}</td>
+                <tr class="hover:bg-slate-50/80 transition">
+                    <!-- Place -->
+                    <td class="py-3 px-1.5 sm:px-4 text-center font-bold text-slate-700">
+                        {{ item.place }}
+                    </td>
+
+                    <!-- Player Name (Truncates gracefully if extremely long) -->
+                    <td class="py-3 px-2 sm:px-4 font-medium text-slate-900 truncate">
+                        {{ item.name }}
+                    </td>
+
+                    <!-- Tag Out -->
+                    <td class="py-3 px-1 sm:px-4 text-center">
+                        {% if item.tag_out %}
+                            <span class="inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                #{{ item.tag_out }}
+                            </span>
+                        {% else %}
+                            <span class="text-slate-300 font-normal">—</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- Payout -->
+                    <td class="py-3 px-2 sm:px-4 text-right font-bold text-emerald-600">
+                        {{ item.payout_dollars }}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </form>
+    </div>
+</div>
 {% endblock %}

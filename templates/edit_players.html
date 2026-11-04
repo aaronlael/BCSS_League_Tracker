@@ -1,38 +1,128 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="max-w-6xl mx-auto space-y-4 px-2 sm:px-0">
+    <div class="flex items-center justify-between">
+        <div>
+            <h3 class="text-2xl font-bold text-slate-900 tracking-tight">Total Players: {{ data|length }}</h3>
+            <p class="text-sm text-slate-500">Manage registered players and active preferences.</p>
+        </div>
+    </div>
 
-    <table border="1">
-        <thead>
-            <tr>
-                <th>id</th>
-                <th>Player</th>
-                <th>Tag</th>
-                <th>Payout</th>
-                <th>CTP1</th>
-                <th>CTP2</th>
-                <th>Ace Pot</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in data %}
-                <tr><form method="POST" action="delete_player/{{ item.id }}">
-                        <td>{{ item.id }}</td>
-                        <td><input type="hidden" name="name" value="{{ item.name }}">
-                            {{ item.name }}</td>
-                        <td>{{ item.tag_in }}</td>
-                        <td>{{ item.payout_in }}</td>
-                        <td>{{ item.CTP1 }}</td>
-                        <td>{{ item.CTP2 }}</td>
-                        <td>{{ item.ace_pot }}</td>
-                        <td>
-                         <button type="submit">Delete</button>
+    <!-- Mobile View: Stacked Cards (Visible on screens < 768px) -->
+    <div class="block md:hidden space-y-3">
+        {% for item in data %}
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <div>
+                    <h4 class="font-bold text-slate-900 text-base">{{ item.name }}</h4>
+                    <span class="text-xs font-mono text-slate-400">ID: {{ item.id }}</span>
+                </div>
+                <div class="text-right">
+                    {% if item.tag_in %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Tag #{{ item.tag_in }}
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-400 border border-slate-200">
+                            No Tag
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Status Badges Grid -->
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="flex items-center gap-1.5 text-slate-600">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full {% if item.payout_in %}bg-emerald-500{% else %}bg-slate-200{% endif %}"></span>
+                    Payout
+                </div>
+                <div class="flex items-center gap-1.5 text-slate-600">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full {% if item.CTP1 %}bg-emerald-500{% else %}bg-slate-200{% endif %}"></span>
+                    CTP1
+                </div>
+                <div class="flex items-center gap-1.5 text-slate-600">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full {% if item.CTP2 %}bg-emerald-500{% else %}bg-slate-200{% endif %}"></span>
+                    CTP2
+                </div>
+                <div class="flex items-center gap-1.5 text-slate-600">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full {% if item.ace_pot %}bg-emerald-500{% else %}bg-slate-200{% endif %}"></span>
+                    Ace Pot
+                </div>
+            </div>
+
+            <!-- Mobile Delete Action -->
+            <div class="pt-2 border-t border-slate-100 flex justify-end">
+                <form method="POST" action="delete_player/{{ item.id }}" class="w-full" onsubmit="return confirm('Delete {{ item.name }}?');">
+                    <input type="hidden" name="name" value="{{ item.name }}">
+                    <button type="submit" class="w-full inline-flex justify-center items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition">
+                        <i class="bi bi-trash"></i> Delete Player
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Desktop View: Table (Visible on screens >= 768px) -->
+    <div class="hidden md:block bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
+                <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                        <th scope="col" class="px-4 py-3.5 text-center">ID</th>
+                        <th scope="col" class="px-4 py-3.5">Player</th>
+                        <th scope="col" class="px-4 py-3.5 text-center">Tag #</th>
+                        <th scope="col" class="px-4 py-3.5 text-center">Payout</th>
+                        <th scope="col" class="px-4 py-3.5 text-center">CTP1</th>
+                        <th scope="col" class="px-4 py-3.5 text-center">CTP2</th>
+                        <th scope="col" class="px-4 py-3.5 text-center">Ace Pot</th>
+                        <th scope="col" class="px-4 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in data %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-4 py-3.5 text-center font-mono text-xs text-slate-400">
+                            {{ item.id }}
                         </td>
-                        </form>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
+                        <td class="px-4 py-3.5 font-medium text-slate-900">
+                            {{ item.name }}
+                        </td>
+                        <td class="px-4 py-3.5 text-center font-bold text-slate-800">
+                            {% if item.tag_in %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    #{{ item.tag_in }}
+                                </span>
+                            {% else %}
+                                <span class="text-slate-300 font-normal">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3.5 text-center">
+                            <span class="inline-block w-2.5 h-2.5 rounded-full {% if item.payout_in %}bg-emerald-500{% else %}bg-slate-200{% endif %}"></span>
+                        </td>
+                        <td class="px-4 py-3.5 text-center">
+                            <span class="inline-block w-2.5 h-2.5 rounded-full {% if item.CTP1 %}bg-emerald-500{% else %}bg-slate-200{% endif %}"></span>
+                        </td>
+                        <td class="px-4 py-3.5 text-center">
+                            <span class="inline-block w-2.5 h-2.5 rounded-full {% if item.CTP2 %}bg-emerald-500{% else %}bg-slate-200{% endif %}"></span>
+                        </td>
+                        <td class="px-4 py-3.5 text-center">
+                            <span class="inline-block w-2.5 h-2.5 rounded-full {% if item.ace_pot %}bg-emerald-500{% else %}bg-slate-200{% endif %}"></span>
+                        </td>
+                        <td class="px-4 py-3.5 text-right">
+                            <form method="POST" action="delete_player/{{ item.id }}" class="inline-block" onsubmit="return confirm('Delete {{ item.name }}?');">
+                                <input type="hidden" name="name" value="{{ item.name }}">
+                                <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}

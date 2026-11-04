@@ -1,79 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BCSS Player Tracker</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Bootstrap Icons & Inter Font -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+
+    <!-- jQuery & jQuery UI -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
     <style>
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+        body { font-family: 'Inter', sans-serif; }
+
+        /* Modernized jQuery UI Autocomplete styling */
+        .ui-autocomplete {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+            padding: 0.5rem 0 !important;
+            z-index: 1000 !important;
         }
-        .container {
-            flex: 1; /* Make the container grow to fill the remaining space */
+        .ui-menu-item-wrapper {
+            padding: 0.5rem 1rem !important;
+            color: #334155 !important;
+            font-size: 0.875rem !important;
+        }
+        .ui-state-active, .ui-widget-content .ui-state-active {
+            background-color: #f1f5f9 !important;
+            border: none !important;
+            color: #0f172a !important;
+            font-weight: 500 !important;
+            margin: 0 !important;
         }
     </style>
 </head>
-<body>
+<body class="flex flex-col min-h-full text-slate-800">
+
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4">
+                {% for category, message in messages %}
+                    <div class="p-4 mb-3 rounded-lg text-sm font-medium flex items-center justify-between
+                        {% if category == 'error' or category == 'danger' %} bg-red-50 text-red-700 border border-red-200
+                        {% elif category == 'success' %} bg-emerald-50 text-emerald-700 border border-emerald-200
+                        {% else %} bg-blue-50 text-blue-700 border border-blue-200 {% endif %}">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
     {% endwith %}
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">BCSS Tracker</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item active">
-                    <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/newscoreentry">Auto Score</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/scoreentry">Backup Score</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/editplayers">Delete Player</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/wrapup">Review</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/ctpwrap">CTP</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/tagsummary">Current Tags</a>
-                </li>
-            </ul>
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <a href="/" class="flex items-center gap-2 text-slate-900 font-bold text-lg tracking-tight">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black">B</div>
+                        <span>BCSS Tracker</span>
+                    </a>
+
+                    <!-- Desktop Nav Links -->
+                    <nav class="hidden lg:flex space-x-1">
+                        <a href="/" class="px-3 py-2 rounded-md text-sm font-medium text-slate-900 bg-slate-100"><i class="bi bi-house mr-1"></i> Home</a>
+                        <a href="/newscoreentry" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">Auto Score</a>
+                        <a href="/scoreentry" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">Backup Score</a>
+                        <a href="/editplayers" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">Delete Player</a>
+                        <a href="/wrapup" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">Review</a>
+                        <a href="/ctpwrap" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">CTP</a>
+                        <a href="/tagsummary" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">Current Tags</a>
+                        <a href="/handicaps/today" class="px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition">CTP Handicaps</a>
+                    </nav>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="flex items-center lg:hidden">
+                    <button type="button" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="p-2 rounded-md text-slate-500 hover:bg-slate-100">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
         </div>
-    </nav>
 
-    <div class="container">
-        {% block content %}
-        {% endblock %}
-    </div>
+        <!-- Mobile Nav Menu -->
+        <div class="hidden lg:hidden border-t border-slate-200 bg-white" id="mobileMenu">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="/" class="block px-3 py-2 rounded-md text-base font-medium text-slate-900 bg-slate-100">Home</a>
+                <a href="/newscoreentry" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">Auto Score</a>
+                <a href="/scoreentry" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">Backup Score</a>
+                <a href="/editplayers" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">Delete Player</a>
+                <a href="/wrapup" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">Review</a>
+                <a href="/ctpwrap" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">CTP</a>
+                <a href="/tagsummary" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">Current Tags</a>
+                <a href="/handicaps/today" class="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:bg-slate-50">CTP Handicaps</a>
+            </div>
+        </div>
+    </header>
 
-    <footer class="bg-dark text-light py-3">
-        <div class="container">
-            <p><a href="https://maxyph.com">&copy; 2025 MAXYPH Designs</a></p>
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center sm:text-left text-xs text-slate-500">
+            <a href="https://maxyph.com" class="hover:text-indigo-600 transition font-medium">&copy; 2025 MAXYPH Designs</a>
         </div>
     </footer>
 
-
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

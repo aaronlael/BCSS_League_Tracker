@@ -2,6 +2,9 @@
 import datetime as dt
 import mysql.connector
 import os
+import pytz
+
+MOUNTAIN_TZ = pytz.timezone('America/Denver')
 
 
 def connect_to_mysql() -> tuple:
@@ -387,13 +390,16 @@ def get_tag_holders() -> list:
 
     try:
         mycursor = mydb.cursor()
-        sql = """select t1.name, t1.tag_out, t1.date from BCSS_Players t1
-        Where t1.date = (select MAX(t2.date) From BCSS_Players t2
-            WHERE t2.name = t1.name)
-        and t1.tag_out is not null
-        ORDER BY tag_out ASC;"""
+        # Added YEAR(t1.date) = YEAR(CURDATE())
+        sql = """SELECT t1.name, t1.tag_out, t1.date
+                 FROM BCSS_Players t1
+                 WHERE t1.date = (SELECT MAX(t2.date) FROM BCSS_Players t2
+                                  WHERE t2.name = t1.name)
+                 AND t1.tag_out IS NOT NULL
+                 AND YEAR(t1.date) = YEAR(CURDATE())
+                 ORDER BY tag_out ASC;"""
 
-        mycursor.execute(sql)  # Use a tuple for parameter binding
+        mycursor.execute(sql)
         results = mycursor.fetchall()
         return results, None
     except mysql.connector.Error as err:
@@ -429,7 +435,7 @@ def get_player_history(player) -> list:
     try:
         mycursor = mydb.cursor()
         sql = """select name, tag_out, date from BCSS_Players
-        WHERE name = %s
+        WHERE name = %s AND YEAR(date) = YEAR(CURDATE())
         ORDER BY date DESC"""
 
         mycursor.execute(sql, (player,))  # Use a tuple for parameter binding
@@ -584,4 +590,126 @@ def get_player_stats_by_tag(year, tag):
         if mycursor:
             mycursor.close()
         if mydb and mydb.is_connected():
+            mydb.close()
+
+
+
+def upsert_league_schedule(schedule_data: list) -> tuple:
+    """
+    Takes the list of dictionaries from the webscraper and inserts/updates
+    the league_schedule table.
+    Args: schedule_data: list of dicts [{'date': 'YYYY-MM-DD', 'link': 'url'}, ...]
+    """
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        return False, error_message
+
+    try:
+        mycursor = mydb.cursor()
+        # Using ON DUPLICATE KEY UPDATE because event_date is the Primary Key
+        sql = """
+            INSERT INTO league_schedule (event_date, scoreboard_url)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE scoreboard_url = VALUES(scoreboard_url)
+        """
+
+        # Prepare the list of tuples for executemany
+        data_to_insert = [(item['date'], item['link']) for item in schedule_data]
+
+        mycursor.executemany(sql, data_to_insert)
+        mydb.commit()
+        print(f"Successfully processed {mycursor.rowcount} schedule records.")
+        return True, None
+
+    except mysql.connector.Error as err:
+        print(f"Error updating schedule: {err}")
+        mydb.rollback()
+        return False, str(err)
+    finally:
+        if mydb and mydb.is_connected():
+            mycursor.close()
+            mydb.close()
+
+
+def get_scoreboard_url(target_date: str = None) -> tuple:
+    """
+    Retrieves the scoreboard URL for a specific date.
+    Defaults to today's date if none provided.
+    """
+    if target_date is None:
+        target_date = dt.date.today().strftime("%Y-%m-%d")
+
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        return None, error_message
+
+    try:
+        mycursor = mydb.cursor()
+        sql = "SELECT scoreboard_url FROM league_schedule WHERE event_date = %s"
+
+        mycursor.execute(sql, (target_date,))
+        result = mycursor.fetchone()
+
+        if result:
+            return result[0], None
+        else:
+            return None, f"No event found for date: {target_date}"
+
+    except mysql.connector.Error as err:
+        return None, str(err)
+    finally:
+        if mydb and mydb.is_connected():
+            mycursor.close()
+            mydb.close()
+
+
+
+def get_todays_player_handicaps() -> tuple:
+    """
+    Finds all players registered for today, retrieves their most recent
+    score from the current calendar year (prior to today).
+    If no previous round exists, returns 0.
+    """
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        return None, error_message
+
+    today = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")
+
+    # This query:
+    # 1. Finds names of players registered today (t1).
+    # 2. Left Joins with their most recent score strictly before today (t2).
+    # 3. Uses COALESCE to treat missing previous scores as 54 (making the result 0).
+    sql = """
+        SELECT
+            t1.name,
+            (COALESCE(t2.score, 54) - 54) as adjusted_score
+        FROM BCSS_Players t1
+        LEFT JOIN BCSS_Players t2 ON t1.name = t2.name
+          AND t2.date = (
+              SELECT MAX(t3.date)
+              FROM BCSS_Players t3
+              WHERE t3.name = t1.name
+              AND t3.date < %s
+              AND YEAR(t3.date) = YEAR(CURDATE())
+              AND t3.score IS NOT NULL
+          )
+        WHERE t1.date = %s
+        ORDER BY t1.name ASC;
+    """
+
+    try:
+        mycursor = mydb.cursor(dictionary=True)
+        # We pass today twice: once for the subquery date limit and once for the registration filter
+        mycursor.execute(sql, (today, today))
+        results = mycursor.fetchall()
+
+        return results, None
+
+    except mysql.connector.Error as err:
+        print(f"Error retrieving player handicaps: {err}")
+        return None, str(err)
+    finally:
+        if mydb and mydb.is_connected():
+            mycursor.close()
             mydb.close()

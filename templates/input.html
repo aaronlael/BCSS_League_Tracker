@@ -1,62 +1,112 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <style>
-        /* Optional basic styling for the demo */
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .ui-autocomplete { z-index: 1000; } /* Ensures the menu is above other elements */
-    </style>
-    <h1>User Signin</h1>
+<div class="max-w-lg mx-auto">
+    <!-- Card Container -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
 
-    <form action="#" method="post" id="userForm">  <label for="name">Name:</label><br>
-        <input type="text" id="name" name="name" required><br><br>
+        <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+            <h1 class="text-xl font-semibold text-slate-900">User Sign-in</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Enter player details and options for today's session.</p>
+        </div>
 
-        <label for="tag">tag:</label>
-        <input type="checkbox" id="tag" name="tag" checked><br><br>
+        <form action="#" method="post" id="userForm" class="p-6 space-y-5">
 
-        <label for="tagNumber">Tag Number:</label><br>
-        <input type="number" id="tagNumber" name="tagNumber"><br><br>
+            <!-- Name Input -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <div class="relative rounded-md shadow-sm">
+                    <input type="text" id="name" name="name" required placeholder="Type player name..."
+                        class="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+            </div>
 
-        <label for="payout">Payout:</label>
-        <input type="checkbox" id="payout" name="payout" checked><br><br>
+            <!-- Tag Options Group -->
+            <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="block text-sm font-medium text-slate-800">Tag Active</span>
+                        <span class="block text-xs text-slate-500">Include tag in today's round</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="tag" name="tag" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
 
-        <label for="ctp1">CTP1:</label>
-        <input type="checkbox" id="ctp1" name="ctp1" checked><br><br>
+                <div class="pt-2 border-t border-slate-200">
+                    <label for="tagNumber" class="block text-xs font-medium text-slate-700 mb-1">Tag Number</label>
+                    <input type="number" id="tagNumber" name="tagNumber" placeholder="e.g. 42"
+                        class="w-full px-3 py-1.5 text-sm bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+            </div>
 
-        <label for="ctp2">CTP2:</label>
-        <input type="checkbox" id="ctp2" name="ctp2" checked><br><br>
+            <!-- Toggle Options Grid -->
+            <div class="space-y-3 pt-1">
+                <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pots & Entries</label>
 
-        <label for="ace_pot">Ace Pot:</label>
-        <input type="checkbox" id="ace_pot" name="ace_pot" checked><br><br>
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
 
-        <input type="submit" value="Submit">
-    </form>
-    <script>
-        document.getElementById('userForm').addEventListener('submit', function(event) {
-            const tagNumber = document.getElementById('tagNumber').value;
-            const tagChecked = document.getElementById('tag').checked;
+                    <!-- Payout -->
+                    <label class="flex items-center justify-between p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
+                        <span class="text-sm font-medium text-slate-700">Payout</span>
+                        <input type="checkbox" id="payout" name="payout" checked class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                    </label>
 
-            if (tagNumber && !tagChecked) {
-                alert('Warning: Tag number is entered, but the tag is not checked.');
-                event.preventDefault(); // Prevent form submission
-            }
-            if (tagChecked && !tagNumber) {
-                alert('Warning:  Please enter a tag number if tag is checked.');
-                event.preventDefault();
-            }
+                    <!-- Ace Pot -->
+                    <label class="flex items-center justify-between p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
+                        <span class="text-sm font-medium text-slate-700">Ace Pot</span>
+                        <input type="checkbox" id="ace_pot" name="ace_pot" checked class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                    </label>
 
+                    <!-- CTP1 -->
+                    <label class="flex items-center justify-between p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
+                        <span class="text-sm font-medium text-slate-700">CTP 1</span>
+                        <input type="checkbox" id="ctp1" name="ctp1" checked class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                    </label>
+
+                    <!-- CTP2 -->
+                    <label class="flex items-center justify-between p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
+                        <span class="text-sm font-medium text-slate-700">CTP 2</span>
+                        <input type="checkbox" id="ctp2" name="ctp2" checked class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500">
+                    </label>
+
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-2">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition text-sm">
+                    Submit Sign-in
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Form Validation logic
+    document.getElementById('userForm').addEventListener('submit', function(event) {
+        const tagNumber = document.getElementById('tagNumber').value;
+        const tagChecked = document.getElementById('tag').checked;
+
+        if (tagNumber && !tagChecked) {
+            alert('Warning: Tag number is entered, but the tag toggle is off.');
+            event.preventDefault();
+        }
+        if (tagChecked && !tagNumber) {
+            alert('Warning: Please enter a tag number if tag is toggled on.');
+            event.preventDefault();
+        }
+    });
+
+    // Autocomplete Logic
+    $(function() {
+        $("#name").autocomplete({
+            source: "/individuals/autocomplete",
+            minLength: 2,
+            delay: 300
         });
-    </script>
-    <script>
-        // === Autocomplete JavaScript Logic ===
-        $(function() {
-            // Target the input field by its ID
-            $("#name").autocomplete({
-                // The source is our Flask JSON endpoint
-                source: "/individuals/autocomplete",
-                minLength: 2, // Start searching after 2 characters are typed
-                delay: 500    // Wait 500ms before querying the server
-            });
-        });
-    </script>
+    });
+</script>
 {% endblock %}

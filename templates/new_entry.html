@@ -1,230 +1,205 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
-    <form method="POST" action="{{ url_for('scraped_score_entry') }}">
+<div class="max-w-5xl mx-auto space-y-6">
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 flex items-start gap-3">
+        <i class="bi bi-info-circle text-lg text-blue-600 mt-0.5"></i>
         <p>Drag the DB id of the correct player from the right onto the corresponding UDisc player's ID field.</p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Place</th>
-                    <th>Udisc Player</th>
-                    <th>id</th>
-                    <th>DB Player</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in range(data['participants']|length) %}
-                <tr>
-                    <td>{{ data['scraped_data'][i].place }}</td>
-                    <td>{{ data['scraped_data'][i].name }}</td>
-                    <td>
-                        <input type="number" name="value_{{ i }}" class="drop-target" required>
-                    </td>
-                    <td class="draggable-item" draggable="true" data-db-id="{{ data['participants'][i].id }}">
-                        {{ data['participants'][i].name }} ({{ data['participants'][i].id }})
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <button type="submit">Update Values</button>
-        <input type="hidden" name='scraped_data' value="{{ data['scraped_data'] }}">
+    </div>
+
+    <form method="POST" action="{{ url_for('scraped_score_entry') }}" class="space-y-6">
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <tr>
+                            <th scope="col" class="px-6 py-3.5 text-center w-16">Place</th>
+                            <th scope="col" class="px-6 py-3.5">Udisc Player</th>
+                            <th scope="col" class="px-6 py-3.5 w-32">id</th>
+                            <th scope="col" class="px-6 py-3.5">DB Player</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for i in range(data['participants']|length) %}
+                        <tr class="hover:bg-slate-50/50">
+                            <td class="px-6 py-4 text-center font-bold text-slate-700">
+                                {{ data['scraped_data'][i].place }}
+                            </td>
+                            <td class="px-6 py-4 font-medium text-slate-900">
+                                {{ data['scraped_data'][i].name }}
+                            </td>
+                            <td class="px-6 py-3">
+                                <input type="number" name="value_{{ i }}" required
+                                    class="drop-target w-24 px-2.5 py-1.5 text-center text-sm font-mono border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                            </td>
+                            <td class="px-6 py-3">
+                                <span class="draggable-item inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 text-xs font-medium cursor-grab hover:bg-slate-100 hover:border-slate-300 transition"
+                                    draggable="true" data-db-id="{{ data['participants'][i].id }}">
+                                    <i class="bi bi-grip-vertical text-slate-400"></i>
+                                    {{ data['participants'][i].name }} ({{ data['participants'][i].id }})
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="flex justify-end">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-6 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition text-sm">
+                Update Values
+            </button>
+            <input type="hidden" name="scraped_data" value="{{ data['scraped_data'] }}">
+        </div>
     </form>
+</div>
 
-    <style>
-        .drop-target {
-            border: 1px solid #ccc;
-            padding: 5px;
-            width: 80px; /* Adjust as needed */
-        }
+<style>
+    .drop-active {
+        background-color: #e0e7ff !important;
+        border-color: #6366f1 !important;
+        border-style: dashed !important;
+    }
+    .used-item {
+        opacity: 0.4;
+        cursor: not-allowed !important;
+        background-color: #f1f5f9 !important;
+    }
+</style>
 
-        .drop-active {
-            background-color: #f0f8ff; /* Light blue highlight */
-            border: 2px dashed #aaa;
-        }
+<script>
+    const draggables = document.querySelectorAll('.draggable-item');
+    const dropTargets = document.querySelectorAll('.drop-target');
+    const idToDraggableMap = new Map();
 
-        .draggable-item {
-            cursor: grab;
-            padding: 5px;
-        }
-    </style>
+    draggables.forEach(draggable => {
+        idToDraggableMap.set(draggable.dataset.dbId, draggable);
+    });
 
-  <script>
-        const draggables = document.querySelectorAll('.draggable-item');
-        const dropTargets = document.querySelectorAll('.drop-target');
+    function autoMatchPlayers() {
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const udiscPlayerName = row.cells[1].textContent.trim();
+            const dbPlayerCellContent = row.cells[3].textContent.trim();
+            const dbPlayerNameMatch = dbPlayerCellContent.match(/^([^(]+)/);
+            const dbPlayerName = dbPlayerNameMatch ? dbPlayerNameMatch[1].trim() : '';
+            const dbIdMatch = dbPlayerCellContent.match(/\((\d+)\)/);
+            const dbId = dbIdMatch ? dbIdMatch[1] : null;
+            const inputField = row.querySelector('.drop-target');
 
-        // A Map to link a player's ID to their original draggable element
-        const idToDraggableMap = new Map();
-        draggables.forEach(draggable => {
-            idToDraggableMap.set(draggable.dataset.dbId, draggable);
-        });
-
-        // --- Automatic Matching Logic ---
-        function autoMatchPlayers() {
-            const rows = document.querySelectorAll('tbody tr');
-
-            rows.forEach(row => {
-                const udiscPlayerName = row.cells[1].textContent.trim();
-                const dbPlayerCellContent = row.cells[3].textContent.trim();
-
-                const dbPlayerNameMatch = dbPlayerCellContent.match(/^([^(]+)/);
-                const dbPlayerName = dbPlayerNameMatch ? dbPlayerNameMatch[1].trim() : '';
-
-                const dbIdMatch = dbPlayerCellContent.match(/\((\d+)\)/);
-                const dbId = dbIdMatch ? dbIdMatch[1] : null;
-
-                const inputField = row.querySelector('.drop-target');
-
-                if (udiscPlayerName === dbPlayerName && dbId && inputField) {
-                    inputField.value = dbId;
-
-                    // Visually disable the matched draggable item
-                    const dbPlayerItem = row.cells[3];
-                    dbPlayerItem.style.opacity = '0.5';
+            if (udiscPlayerName === dbPlayerName && dbId && inputField) {
+                inputField.value = dbId;
+                const dbPlayerItem = row.cells[3].querySelector('.draggable-item');
+                if (dbPlayerItem) {
+                    dbPlayerItem.style.opacity = '0.4';
                     dbPlayerItem.draggable = false;
                     dbPlayerItem.style.cursor = 'default';
                     dbPlayerItem.classList.add('used-item');
-
-                    // Make the input draggable for undoing the match
-                    inputField.draggable = true;
-                    inputField.style.cursor = 'grab';
-                    inputField.style.backgroundColor = '#e6ffe6';
                 }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', autoMatchPlayers);
-        // --- End Automatic Matching Logic ---
-
-        // --- Event Listeners ---
-        draggables.forEach(draggable => {
-            draggable.addEventListener('dragstart', dragStart);
-            draggable.addEventListener('dragend', dragEnd);
+                inputField.draggable = true;
+                inputField.style.cursor = 'grab';
+                inputField.classList.add('bg-emerald-50', 'border-emerald-300');
+            }
         });
+    }
 
-        dropTargets.forEach(dropTarget => {
-            dropTarget.addEventListener('dragover', dragOver);
-            dropTarget.addEventListener('drop', drop);
-            dropTarget.addEventListener('dragenter', dragEnter);
-            dropTarget.addEventListener('dragleave', dragLeave);
+    document.addEventListener('DOMContentLoaded', autoMatchPlayers);
 
-            // NEW: Make input fields draggable for "undo" functionality
-            dropTarget.addEventListener('dragstart', dragStartFromInput);
-            dropTarget.addEventListener('dragend', dragEndFromInput);
-        });
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', dragStart);
+        draggable.addEventListener('dragend', dragEnd);
+    });
 
-        let draggedItem = null;
+    dropTargets.forEach(dropTarget => {
+        dropTarget.addEventListener('dragover', dragOver);
+        dropTarget.addEventListener('drop', drop);
+        dropTarget.addEventListener('dragenter', dragEnter);
+        dropTarget.addEventListener('dragleave', dragLeave);
+        dropTarget.addEventListener('dragstart', dragStartFromInput);
+        dropTarget.addEventListener('dragend', dragEndFromInput);
+    });
 
-        // --- Dragging Functions (From DB Player List) ---
-        function dragStart(event) {
-            if (event.target.draggable) {
-                draggedItem = event.target;
-                event.dataTransfer.setData('text/plain', draggedItem.dataset.dbId);
-                event.dataTransfer.effectAllowed = 'copy';
-                draggedItem.classList.add('dragging');
-            } else {
-                event.preventDefault();
-            }
-        }
+    let draggedItem = null;
 
-        function dragEnd(event) {
-            event.target.classList.remove('dragging');
-
-            if (event.dataTransfer.dropEffect !== 'none' && event.target.draggable) {
-                 // The item was successfully dropped into an input. Disable it.
-                 event.target.style.opacity = '0.5';
-                 event.target.draggable = false;
-                 event.target.style.cursor = 'default';
-                 event.target.classList.add('used-item');
-            }
-            draggedItem = null;
-        }
-
-        // --- Dragging Functions (From Input Field for Undo/Re-assignment) ---
-        function dragStartFromInput(event) {
-            if (event.target.draggable && event.target.value) {
-                // Set the DB ID being dragged
-                event.dataTransfer.setData('text/plain', event.target.value);
-                draggedItem = event.target; // The input field is now the dragged item
-                event.dataTransfer.effectAllowed = 'move'; // Use 'move' for re-assignment/undo
-                event.target.classList.add('dragging-out');
-            } else {
-                // If it doesn't have a value, prevent dragging it
-                event.preventDefault();
-            }
-        }
-
-        function dragEndFromInput(event) {
-            event.target.classList.remove('dragging-out');
-
-            // Check if the drop was an 'undo' (dropped outside a valid target)
-            if (event.dataTransfer.dropEffect === 'none') {
-                const dbId = event.target.value;
-                event.target.value = ''; // **Clear the input field**
-                event.target.draggable = false;
-                event.target.style.cursor = 'default';
-                event.target.style.backgroundColor = ''; // Remove fill color
-
-                // **Re-enable the original DB player item**
-                const originalDraggable = idToDraggableMap.get(dbId);
-                if (originalDraggable) {
-                    originalDraggable.draggable = true;
-                    originalDraggable.style.opacity = '1';
-                    originalDraggable.style.cursor = 'grab';
-                    originalDraggable.classList.remove('used-item');
-                }
-            } else if (event.dataTransfer.dropEffect === 'copy') {
-                 // The value was dropped into *another* input field.
-                 // The *source* input field needs to be cleared and the original item re-enabled.
-                 const dbId = event.target.value;
-                 event.target.value = ''; // Clear the input field
-                 event.target.draggable = false;
-                 event.target.style.cursor = 'default';
-                 event.target.style.backgroundColor = ''; // Remove fill color
-
-                 // Note: The receiving 'drop' function handles enabling the original item there.
-            }
-            draggedItem = null;
-        }
-
-        // --- Drop Handling ---
-        function dragOver(event) {
+    function dragStart(event) {
+        if (event.target.draggable) {
+            draggedItem = event.target;
+            event.dataTransfer.setData('text/plain', draggedItem.dataset.dbId);
+            event.dataTransfer.effectAllowed = 'copy';
+        } else {
             event.preventDefault();
-            event.dataTransfer.dropEffect = 'copy';
         }
+    }
 
-        function dragEnter(event) {
-            if (event.target.classList.contains('drop-target') && event.target.value === "") {
-                event.target.classList.add('drop-active');
-            }
+    function dragEnd(event) {
+        if (event.dataTransfer.dropEffect !== 'none' && event.target.draggable) {
+            event.target.style.opacity = '0.4';
+            event.target.draggable = false;
+            event.target.style.cursor = 'default';
+            event.target.classList.add('used-item');
         }
+        draggedItem = null;
+    }
 
-        function dragLeave(event) {
-            if (event.target.classList.contains('drop-target')) {
-                event.target.classList.remove('drop-active');
-            }
-        }
-
-        function drop(event) {
+    function dragStartFromInput(event) {
+        if (event.target.draggable && event.target.value) {
+            event.dataTransfer.setData('text/plain', event.target.value);
+            draggedItem = event.target;
+            event.dataTransfer.effectAllowed = 'move';
+        } else {
             event.preventDefault();
+        }
+    }
 
-            if (event.target.value === "") {
-                const dbId = event.dataTransfer.getData('text/plain');
-                event.target.value = dbId;
-                event.target.classList.remove('drop-active');
-                event.target.style.backgroundColor = '';
+    function dragEndFromInput(event) {
+        if (event.dataTransfer.dropEffect === 'none') {
+            const dbId = event.target.value;
+            event.target.value = '';
+            event.target.draggable = false;
+            event.target.style.cursor = 'default';
+            event.target.classList.remove('bg-emerald-50', 'border-emerald-300');
 
-                // NEW: Make the input field draggable after a successful drop
-                event.target.draggable = true;
-                event.target.style.cursor = 'grab';
-
-                // NEW: If the ID came from another input field, re-enable its source DB item.
-                // Note: The dragEndFromInput handles clearing the source input.
-
-            } else {
-                event.target.classList.remove('drop-active');
+            const originalDraggable = idToDraggableMap.get(dbId);
+            if (originalDraggable) {
+                originalDraggable.draggable = true;
+                originalDraggable.style.opacity = '1';
+                originalDraggable.style.cursor = 'grab';
+                originalDraggable.classList.remove('used-item');
             }
         }
-    </script>
+        draggedItem = null;
+    }
+
+    function dragOver(event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+    }
+
+    function dragEnter(event) {
+        if (event.target.classList.contains('drop-target') && event.target.value === "") {
+            event.target.classList.add('drop-active');
+        }
+    }
+
+    function dragLeave(event) {
+        if (event.target.classList.contains('drop-target')) {
+            event.target.classList.remove('drop-active');
+        }
+    }
+
+    function drop(event) {
+        event.preventDefault();
+        if (event.target.value === "") {
+            const dbId = event.dataTransfer.getData('text/plain');
+            event.target.value = dbId;
+            event.target.classList.remove('drop-active');
+            event.target.classList.add('bg-emerald-50', 'border-emerald-300');
+            event.target.draggable = true;
+            event.target.style.cursor = 'grab';
+        } else {
+            event.target.classList.remove('drop-active');
+        }
+    }
+</script>
 {% endblock %}

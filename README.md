@@ -34,6 +34,8 @@ App to Track the Breaking Chains Sober Sundays disc golf league
   
    
 
+The `run_scraper.sh` task launcher expects `host`, `user`, `password`, and `database` to be set in the task environment. Keep database credentials out of the script and version control.
+
  To do's
   * season reset functionality/create new league
   * implement endpoints for 2026 bag tag qr codes

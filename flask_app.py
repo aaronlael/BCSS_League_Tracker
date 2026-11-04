@@ -3,7 +3,7 @@ import datetime as dt
 from auth import requires_auth
 from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_player_most_recent_tag, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up, get_players_detailed, delete_player, return_users_from_individuals, get_player_stats_by_tag, get_scoreboard_url, get_todays_player_handicaps
 from disc_choice import punishment
-from flask import Flask, flash, jsonify, render_template, request, redirect, url_for
+from flask import Flask, flash, jsonify, render_template, render_template_string, request, redirect, url_for
 from tag_history import analyze_tag_data
 from fuzzy_sort import fuzzy_sort_names
 import os
@@ -350,7 +350,11 @@ def detailed_tag_data(year: str, tag: str):
     data = get_player_stats_by_tag(year, tag)
     stats = analyze_tag_data(data)
     if not stats:
-        return f"<h1>No data found for Tag {tag} in {year}.</h1>"
+        return render_template_string(
+            '<h1>No data found for Tag {{ tag }} in {{ year }}.</h1>',
+            tag=tag,
+            year=year,
+        )
 
     return render_template(
         'dashboard.html',

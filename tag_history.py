@@ -1,3 +1,39 @@
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+def select_current_tag_holders(records):
+    """Select the latest current-year owner for each tag and keep players unique."""
+    newest_first = sorted(records, key=lambda record: (record[2], record[3]), reverse=True)
+    latest_by_tag = {}
+    for name, tag, date, record_id in newest_first:
+        latest_by_tag.setdefault(tag, (name, tag, date, record_id))
+
+    latest_tag_records = sorted(
+        latest_by_tag.values(),
+        key=lambda record: (record[2], record[3]),
+        reverse=True,
+    )
+    holders = []
+    seen_players = set()
+    for name, tag, date, _ in latest_tag_records:
+        player_key = name.strip().casefold()
+        if player_key in seen_players:
+            logger.warning(
+                "Skipping tag %s from current tag summary because player %s "
+                "already has a more recent tag assignment",
+                tag,
+                name,
+            )
+            continue
+        seen_players.add(player_key)
+        holders.append((name, tag, date))
+
+    return sorted(holders, key=lambda record: record[1])
+
+
 def analyze_tag_data(raw_data):
     """Processes raw data into dashboard statistics."""
 

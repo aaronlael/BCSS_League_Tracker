@@ -3,6 +3,7 @@ import datetime as dt
 import mysql.connector
 import os
 import pytz
+from tag_history import select_current_tag_holders
 
 MOUNTAIN_TZ = pytz.timezone('America/Denver')
 
@@ -390,18 +391,15 @@ def get_tag_holders() -> list:
 
     try:
         mycursor = mydb.cursor()
-        # Added YEAR(t1.date) = YEAR(CURDATE())
         sql = """SELECT t1.name, t1.tag_out, t1.date
                  FROM BCSS_Players t1
-                 WHERE t1.date = (SELECT MAX(t2.date) FROM BCSS_Players t2
-                                  WHERE t2.name = t1.name)
-                 AND t1.tag_out IS NOT NULL
+                 WHERE t1.tag_out IS NOT NULL
                  AND YEAR(t1.date) = YEAR(CURDATE())
-                 ORDER BY tag_out ASC;"""
+                 ORDER BY t1.date DESC, t1.id DESC;"""
 
         mycursor.execute(sql)
-        results = mycursor.fetchall()
-        return results, None
+        records = mycursor.fetchall()
+        return select_current_tag_holders(records), None
     except mysql.connector.Error as err:
         return None, err
 

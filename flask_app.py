@@ -1,8 +1,9 @@
 import ast
 import datetime as dt
+from auth import requires_auth
 from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_player_most_recent_tag, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up, get_players_detailed, delete_player, return_users_from_individuals, get_player_stats_by_tag, get_scoreboard_url, get_todays_player_handicaps
 from disc_choice import punishment
-from flask import Flask, flash, jsonify, render_template, request, redirect, Response, url_for
+from flask import Flask, flash, jsonify, render_template, request, redirect, url_for
 from tag_history import analyze_tag_data
 from fuzzy_sort import fuzzy_sort_names
 import os
@@ -14,33 +15,23 @@ app = Flask(__name__)
 app.secret_key = os.getenv("secret_key")
 USERNAME =os.getenv("site_user")
 PASSWORD = os.getenv("site_pw")
+cookie_secure = os.environ.get('COOKIE_SECURE', 'true').strip().casefold()
+if cookie_secure not in {'true', 'false'}:
+    raise RuntimeError('COOKIE_SECURE must be set to "true" or "false".')
+app.config.update(
+    PERMANENT_SESSION_LIFETIME=dt.timedelta(hours=3),
+    SESSION_COOKIE_NAME='bcss_session',
+    SESSION_COOKIE_PATH='/',
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=cookie_secure == 'true',
+    SESSION_REFRESH_EACH_REQUEST=False,
+    SITE_USER=USERNAME,
+    SITE_PASSWORD=PASSWORD,
+)
 TEST = False
 TEST_DAY_OFFSET = 4
 tz =pytz.timezone('America/Denver')
-
-def check_auth(username, password):
-    """Checks if the provided username and password are valid."""
-    return username == USERNAME and password == PASSWORD
-
-def authenticate():
-    """Sends a 401 response that enables basic auth"""
-    return Response(
-        'Could not verify your access level for that URL.\n'
-        'You have to login with proper credentials', 401,
-        {'WWW-Authenticate': 'Basic realm="Login Required"'}
-    )
-
-def requires_auth(f):
-    """Decorator to enforce authentication."""
-    from functools import wraps
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
-        return f(*args, **kwargs)
-    return decorated
-
 
 MOUNTAIN_TZ = pytz.timezone('America/Denver')
 
@@ -426,7 +417,3 @@ def player_most_recent_tag():
 @app.route('/punishment', methods=['GET'])
 def chooser():
     return jsonify(punishment())
-
-
-
-

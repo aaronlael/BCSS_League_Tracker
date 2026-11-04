@@ -35,9 +35,9 @@ A Flask app for tracking the Breaking Chains Sober Sundays disc golf league. It 
 
 ## Configuration
 
-Copy `.env.example` to `.env` and fill in the values for your environment. The Flask app uses `secret_key`, `site_user`, and `site_pw` for its Flask secret key and HTTP Basic Auth. Database access uses `host`, `user`, `password`, and `database`.
+Copy `.env.example` to `.env` and fill in the values for your environment. The Flask app uses `secret_key`, `site_user`, and `site_pw` for its Flask secret key and HTTP Basic Auth. After a successful Basic Auth check, the app remembers the browser in a signed, HTTP-only `bcss_session` cookie for a fixed three hours. The cookie name is separate from the Putting League app's session cookie. Database access uses `host`, `user`, `password`, and `database`.
 
-The scraper loads the same `.env` file from the directory containing `cron_scrap_job.py`. Keep real credentials only in `.env`; Git ignores it. Never commit credentials or paste them into source files.
+The scraper loads the same `.env` file from the directory containing `cron_scrap_job.py`. Keep real credentials only in `.env`; Git ignores it. Never commit credentials or paste them into source files. Keep `COOKIE_SECURE=true` for HTTPS deployments; set it to `false` only for local development over plain HTTP.
 
 ## Local development
 
@@ -55,7 +55,7 @@ The scraper loads the same `.env` file from the directory containing `cron_scrap
    flask --app flask_app run --debug
    ```
 
-5. Open <http://127.0.0.1:5000/>. The app uses HTTP Basic Auth; configure `site_user` and `site_pw` in `.env`.
+5. For local HTTP development, set `COOKIE_SECURE=false` in `.env`. Open <http://127.0.0.1:5000/> and enter the configured Basic Auth credentials.
 
 The development server is for local use only. Use the existing WSGI configuration for deployment.
 

@@ -85,16 +85,56 @@ class PublicTagHistorySecurityTests(unittest.TestCase):
 
     def test_invalid_score_entry_url_is_rejected_before_database_access(self):
         client = flask_app.app.test_client()
+        with client.session_transaction() as session:
+            session['csrf_token'] = 'test-token'
+
         with patch.object(flask_app, 'get_players') as get_players:
             response = client.post(
                 '/newscoreentry',
-                data={'udisc_code': 'http://127.0.0.1/events/Event123'},
+                data={
+                    'csrf_token': 'test-token',
+                    'udisc_code': 'http://127.0.0.1/events/Event123',
+                },
                 headers={'Authorization': 'Basic dGVzdC11c2VyOnRlc3QtcGFzc3dvcmQ='},
             )
 
         self.assertEqual(response.status_code, 302)
         self.assertIn('/newscoreentry', response.headers['Location'])
         get_players.assert_not_called()
+
+    def test_authenticated_post_without_csrf_token_is_rejected(self):
+        client = flask_app.app.test_client()
+        with patch.object(flask_app, 'get_players') as get_players:
+            response = client.post(
+                '/newscoreentry',
+                data={'udisc_code': 'https://udisc.com/events/Event123'},
+                headers={'Authorization': 'Basic dGVzdC11c2VyOnRlc3QtcGFzc3dvcmQ='},
+            )
+
+        self.assertEqual(response.status_code, 400)
+        get_players.assert_not_called()
+
+    def test_authenticated_form_renders_session_csrf_token(self):
+        client = flask_app.app.test_client()
+        response = client.get(
+            '/',
+            headers={'Authorization': 'Basic dGVzdC11c2VyOnRlc3QtcGFzc3dvcmQ='},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        body = response.get_data(as_text=True)
+        self.assertRegex(
+            body,
+            r'<input type="hidden" name="csrf_token" value="[A-Za-z0-9_-]{40,}">',
+        )
+
+    def test_public_ctp_post_without_csrf_token_is_rejected(self):
+        client = flask_app.app.test_client()
+        with patch.object(flask_app, 'add_ctp') as add_ctp:
+            response = client.post('/ctp/1', data={'new_name': 'Player'})
+
+        self.assertEqual(response.status_code, 400)
+        add_ctp.assert_not_called()
 
 
 if __name__ == '__main__':

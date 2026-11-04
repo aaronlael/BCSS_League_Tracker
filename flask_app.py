@@ -1,9 +1,22 @@
 import ast
 import datetime as dt
+import hmac
+import secrets
 from auth import requires_auth
 from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_player_most_recent_tag, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up, get_players_detailed, delete_player, return_users_from_individuals, get_player_stats_by_tag, get_scoreboard_url, get_todays_player_handicaps
 from disc_choice import punishment
-from flask import Flask, flash, jsonify, render_template, render_template_string, request, redirect, url_for
+from flask import (
+    Flask,
+    abort,
+    flash,
+    jsonify,
+    render_template,
+    render_template_string,
+    request,
+    redirect,
+    session,
+    url_for,
+)
 from tag_history import analyze_tag_data
 from fuzzy_sort import fuzzy_sort_names
 import os
@@ -33,6 +46,33 @@ app.config.update(
     SITE_USER=USERNAME,
     SITE_PASSWORD=PASSWORD,
 )
+
+
+@app.context_processor
+def provide_csrf_token():
+    def get_csrf_token():
+        token = session.get("csrf_token")
+        if token is None:
+            token = secrets.token_urlsafe(32)
+            session["csrf_token"] = token
+        return token
+
+    return {"csrf_token": get_csrf_token}
+
+
+@app.before_request
+def validate_csrf_token():
+    if request.method == "POST":
+        expected_token = session.get("csrf_token")
+        submitted_token = request.form.get("csrf_token")
+        if (
+            not isinstance(expected_token, str)
+            or not isinstance(submitted_token, str)
+            or not hmac.compare_digest(expected_token, submitted_token)
+        ):
+            abort(400, description="CSRF token missing or invalid.")
+
+
 TEST = False
 TEST_DAY_OFFSET = 4
 tz =pytz.timezone('America/Denver')

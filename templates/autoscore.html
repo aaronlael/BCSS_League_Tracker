@@ -9,6 +9,7 @@
         </div>
 
         <form method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div>
                 <label for="udisc_code" class="block text-sm font-medium text-slate-700 mb-1">udisc event code</label>
                 <input type="text" id="udisc_code" name="udisc_code" value="{{ data.url }}" required

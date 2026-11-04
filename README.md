@@ -35,7 +35,7 @@ A Flask app for tracking the Breaking Chains Sober Sundays disc golf league. It 
 
 ## Configuration
 
-Copy `.env.example` to `.env` and fill in the values for your environment. The Flask app uses `secret_key`, `site_user`, and `site_pw` for its Flask secret key and HTTP Basic Auth. After a successful Basic Auth check, the app remembers the browser in a signed, HTTP-only `bcss_session` cookie for a fixed three hours. The cookie name is separate from the Putting League app's session cookie. Database access uses `host`, `user`, `password`, and `database`.
+Copy `.env.example` to `.env` and fill in the values for your environment. The Flask app uses `secret_key`, `site_user`, and `site_pw` for its Flask secret key and HTTP Basic Auth. After a successful Basic Auth check, the app remembers the browser in a signed, HTTP-only `bcss_session` cookie for a fixed three hours. The cookie name is separate from the Putting League app's session cookie. All form submissions use session-bound CSRF tokens, including the public CTP form. Database access uses `host`, `user`, `password`, and `database`.
 
 The scraper loads the same `.env` file from the directory containing `cron_scrap_job.py`. Keep real credentials only in `.env`; Git ignores it. Never commit credentials or paste them into source files. Keep `COOKIE_SECURE=true` for HTTPS deployments; set it to `false` only for local development over plain HTTP.
 
@@ -67,7 +67,7 @@ Run the unit tests with the standard library:
 python -m unittest discover -s tests -v
 ```
 
-The tests cover payout totals and ties, tag-holder selection, and autocomplete/tag lookup queries. Database calls are stubbed; running the tests does not require the league database.
+The tests cover payout totals and ties, tag-holder selection, autocomplete/tag lookup queries, and CSRF rejection. Database calls are stubbed; running the tests does not require the league database.
 
 ## Deploying on PythonAnywhere
 

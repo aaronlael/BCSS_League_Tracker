@@ -11,6 +11,7 @@
         </div>
 
         <form action="#" method="post" id="userForm" class="p-6 space-y-5">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <!-- Name Input -->
             <div>

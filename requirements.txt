@@ -1,0 +1,7 @@
+beautifulsoup4
+Flask
+mysql-connector-python
+python-dotenv
+pytz
+requests
+selenium

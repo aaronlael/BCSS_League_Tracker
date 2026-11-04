@@ -105,6 +105,40 @@ class AutocompleteDatabaseTests(unittest.TestCase):
         self.assertIn('ORDER BY date DESC, id DESC', connection.test_cursor.query)
         self.assertIn('LIMIT 1', connection.test_cursor.query)
 
+    def test_tag_holder_query_includes_record_id_required_by_selector(self):
+        class Cursor:
+            query = None
+
+            def execute(self, query):
+                self.query = query
+
+            def fetchall(self):
+                return [('Recent Player', 42, '2026-11-03', 123)]
+
+            def close(self):
+                pass
+
+        class Connection:
+            def __init__(self):
+                self.test_cursor = Cursor()
+
+            def cursor(self):
+                return self.test_cursor
+
+            def is_connected(self):
+                return True
+
+            def close(self):
+                pass
+
+        connection = Connection()
+        with patch.object(db, 'connect_to_mysql', return_value=(connection, None)):
+            holders, error = db.get_tag_holders()
+
+        self.assertIsNone(error)
+        self.assertEqual(holders, [('Recent Player', 42, '2026-11-03')])
+        self.assertIn('SELECT t1.name, t1.tag_out, t1.date, t1.id', connection.test_cursor.query)
+
 
 if __name__ == '__main__':
     unittest.main()

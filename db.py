@@ -391,7 +391,7 @@ def get_tag_holders() -> list:
 
     try:
         mycursor = mydb.cursor()
-        sql = """SELECT t1.name, t1.tag_out, t1.date
+        sql = """SELECT t1.name, t1.tag_out, t1.date, t1.id
                  FROM BCSS_Players t1
                  WHERE t1.tag_out IS NOT NULL
                  AND YEAR(t1.date) = YEAR(CURDATE())

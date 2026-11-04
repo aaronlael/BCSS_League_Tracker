@@ -469,6 +469,30 @@ def get_players_detailed(date_str) -> tuple:
             mycursor.close()
             mydb.close()
 
+
+def get_player_most_recent_tag(player_name: str) -> tuple:
+    mydb, error_message = connect_to_mysql()
+    if error_message:
+        print(f"Database connection issue: {error_message}")
+        return None, error_message
+
+    try:
+        mycursor = mydb.cursor()
+        sql = """SELECT tag_out
+                 FROM BCSS_Players
+                 WHERE name = %s AND tag_out IS NOT NULL
+                 ORDER BY date DESC, id DESC
+                 LIMIT 1"""
+        mycursor.execute(sql, (player_name,))
+        result = mycursor.fetchone()
+        return (result[0] if result else None), None
+    except mysql.connector.Error as err:
+        return None, err
+    finally:
+        if mydb and mydb.is_connected():
+            mycursor.close()
+            mydb.close()
+
 def delete_player(id: int) -> None:
     mydb, error_message = connect_to_mysql()
     if error_message:

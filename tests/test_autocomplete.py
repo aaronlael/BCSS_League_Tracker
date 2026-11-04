@@ -66,6 +66,45 @@ class AutocompleteDatabaseTests(unittest.TestCase):
         self.assertIn('MAX(p.date) DESC', connection.test_cursor.query)
         self.assertIn('MAX(p.date) IS NULL ASC', connection.test_cursor.query)
 
+    def test_latest_tag_lookup_uses_players_most_recent_tag_out(self):
+        class Cursor:
+            query = None
+            parameters = None
+
+            def execute(self, query, parameters):
+                self.query = query
+                self.parameters = parameters
+
+            def fetchone(self):
+                return (42,)
+
+            def close(self):
+                pass
+
+        class Connection:
+            def __init__(self):
+                self.test_cursor = Cursor()
+
+            def cursor(self):
+                return self.test_cursor
+
+            def is_connected(self):
+                return True
+
+            def close(self):
+                pass
+
+        connection = Connection()
+        with patch.object(db, 'connect_to_mysql', return_value=(connection, None)):
+            tag, error = db.get_player_most_recent_tag('Recent Player')
+
+        self.assertIsNone(error)
+        self.assertEqual(tag, 42)
+        self.assertEqual(connection.test_cursor.parameters, ('Recent Player',))
+        self.assertIn('tag_out IS NOT NULL', connection.test_cursor.query)
+        self.assertIn('ORDER BY date DESC, id DESC', connection.test_cursor.query)
+        self.assertIn('LIMIT 1', connection.test_cursor.query)
+
 
 if __name__ == '__main__':
     unittest.main()

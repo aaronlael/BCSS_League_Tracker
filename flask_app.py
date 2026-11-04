@@ -1,6 +1,6 @@
 import ast
 import datetime as dt
-from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up, get_players_detailed, delete_player, return_users_from_individuals, get_player_stats_by_tag, get_scoreboard_url, get_todays_player_handicaps
+from db import add_player, add_ctp, get_ctp, get_ctp_wrap, get_players, get_player_history, get_player_most_recent_tag, get_tag_history, get_tag_holders, update_player_place, update_tag_out, wrap_up, get_players_detailed, delete_player, return_users_from_individuals, get_player_stats_by_tag, get_scoreboard_url, get_todays_player_handicaps
 from disc_choice import punishment
 from flask import Flask, flash, jsonify, render_template, request, redirect, Response, url_for
 from tag_history import analyze_tag_data
@@ -410,10 +410,22 @@ def autocomplete():
     return jsonify(suggestions)
 
 
+@app.route('/individuals/tag', methods=['GET'])
+def player_most_recent_tag():
+    player_name = request.args.get('name', '').strip()
+    if not player_name:
+        return jsonify({"error": "A player name is required."}), 400
+
+    tag, error = get_player_most_recent_tag(player_name)
+    if error:
+        return jsonify({"error": str(error)}), 500
+
+    return jsonify({"tag": tag})
+
+
 @app.route('/punishment', methods=['GET'])
 def chooser():
     return jsonify(punishment())
-
 
 
 

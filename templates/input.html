@@ -102,10 +102,70 @@
 
     // Autocomplete Logic
     $(function() {
+        const nameInput = document.getElementById('name');
+        const tagInput = document.getElementById('tagNumber');
+        let autoPopulatedTag = null;
+        let lookupRequest = 0;
+
+        async function populateRecentTag(playerName) {
+            const name = playerName.trim();
+            if (!name) return;
+
+            const requestId = ++lookupRequest;
+            try {
+                const response = await fetch(
+                    `/individuals/tag?name=${encodeURIComponent(name)}`
+                );
+                if (!response.ok) {
+                    throw new Error(`Tag lookup failed (${response.status}).`);
+                }
+
+                const result = await response.json();
+                if (
+                    requestId !== lookupRequest ||
+                    nameInput.value.trim() !== name
+                ) {
+                    return;
+                }
+
+                if (
+                    result.tag !== null &&
+                    (!tagInput.value || tagInput.value === autoPopulatedTag)
+                ) {
+                    tagInput.value = result.tag;
+                    autoPopulatedTag = String(result.tag);
+                }
+            } catch (error) {
+                console.error('Could not look up the player tag:', error);
+            }
+        }
+
+        nameInput.addEventListener('input', function() {
+            lookupRequest++;
+            if (
+                autoPopulatedTag !== null &&
+                tagInput.value === autoPopulatedTag
+            ) {
+                tagInput.value = '';
+            }
+            autoPopulatedTag = null;
+        });
+        nameInput.addEventListener('blur', function() {
+            populateRecentTag(nameInput.value);
+        });
+        tagInput.addEventListener('input', function() {
+            autoPopulatedTag = null;
+        });
+
         $("#name").autocomplete({
             source: "/individuals/autocomplete",
             minLength: 2,
-            delay: 300
+            delay: 300,
+            select: function(event, ui) {
+                nameInput.value = ui.item.value;
+                populateRecentTag(ui.item.value);
+                return false;
+            }
         });
     });
 </script>

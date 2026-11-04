@@ -5,6 +5,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from udisc_scrape import InvalidUDiscEventURL, validate_udisc_event_url
+
 
 db_stub = types.ModuleType('db')
 for function_name in (
@@ -36,7 +38,9 @@ fuzzy_sort_stub.fuzzy_sort_names = lambda *args, **kwargs: None
 payout_stub = types.ModuleType('payout')
 payout_stub.payout_manager = lambda *args, **kwargs: None
 udisc_scrape_stub = types.ModuleType('udisc_scrape')
+udisc_scrape_stub.InvalidUDiscEventURL = InvalidUDiscEventURL
 udisc_scrape_stub.scrape_results_page = lambda *args, **kwargs: None
+udisc_scrape_stub.validate_udisc_event_url = validate_udisc_event_url
 
 with patch.dict(
     sys.modules,
@@ -57,6 +61,13 @@ with patch.dict(
 
 
 class PublicTagHistorySecurityTests(unittest.TestCase):
+    def setUp(self):
+        flask_app.app.config.update(
+            SECRET_KEY='test-secret',
+            SITE_USER='test-user',
+            SITE_PASSWORD='test-password',
+        )
+
     def test_no_data_response_escapes_attacker_controlled_tag_and_year(self):
         client = flask_app.app.test_client()
         with patch.object(flask_app, 'get_player_stats_by_tag', return_value=([], None)):
@@ -71,6 +82,19 @@ class PublicTagHistorySecurityTests(unittest.TestCase):
         self.assertIn('&lt;img', body)
         self.assertNotIn('<svg', body)
         self.assertNotIn('<img', body)
+
+    def test_invalid_score_entry_url_is_rejected_before_database_access(self):
+        client = flask_app.app.test_client()
+        with patch.object(flask_app, 'get_players') as get_players:
+            response = client.post(
+                '/newscoreentry',
+                data={'udisc_code': 'http://127.0.0.1/events/Event123'},
+                headers={'Authorization': 'Basic dGVzdC11c2VyOnRlc3QtcGFzc3dvcmQ='},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/newscoreentry', response.headers['Location'])
+        get_players.assert_not_called()
 
 
 if __name__ == '__main__':

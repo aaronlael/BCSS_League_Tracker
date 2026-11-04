@@ -9,7 +9,11 @@ from fuzzy_sort import fuzzy_sort_names
 import os
 import pytz
 from payout import payout_manager
-from udisc_scrape import scrape_results_page
+from udisc_scrape import (
+    InvalidUDiscEventURL,
+    scrape_results_page,
+    validate_udisc_event_url,
+)
 
 app = Flask(__name__)
 app.secret_key = os.getenv("secret_key")
@@ -82,8 +86,13 @@ def new_score_entry():
     global TEST, TEST_DAY_OFFSET
     if request.method == "POST":
         udisc_code = request.form.get("udisc_code")
-        if "https://udisc.com/events/" not in udisc_code:
-            flash("invalid URL entered")
+        try:
+            udisc_code = validate_udisc_event_url(udisc_code)
+        except InvalidUDiscEventURL:
+            flash(
+                "Invalid UDisc event URL. Enter a URL like "
+                "https://udisc.com/events/..."
+            )
             return redirect(url_for("new_score_entry"))
         # participants from entry form today
         dt_val = dt.datetime.now(MOUNTAIN_TZ).strftime("%Y-%m-%d")

@@ -13,17 +13,26 @@ def get_curves_sum(positions: int) -> float:
 def payouts(player_count: int) -> list:
     payout = []
     positions = int(math.ceil(player_count * 0.45))
+    entry_fee = 2
+    total_pot = player_count * entry_fee
     curves_sum = get_curves_sum(positions)
     for i in range(1, positions + 1):
-        payout.append(round((player_count * 2) * get_curves_value(positions, i) / curves_sum))
+        payout.append(max(
+            entry_fee,
+            round(total_pot * get_curves_value(positions, i) / curves_sum),
+        ))
 
-    difference = (player_count * 2) - sum(payout)
+    difference = total_pot - sum(payout)
     if difference > 0:
         payout[0] += difference
     elif difference < 0:
         excess = -difference
-        for i in range(len(payout) - 1, -1, -1):
-            reduction = min(payout[i], excess)
+        for i in range(len(payout)):
+            minimum = max(
+                entry_fee,
+                payout[i + 1] if i + 1 < len(payout) else entry_fee,
+            )
+            reduction = min(payout[i] - minimum, excess)
             payout[i] -= reduction
             excess -= reduction
             if not excess:
@@ -83,5 +92,3 @@ def payout_manager(current_date: str):
                 return err
 
     return f"payouts done for {current_date}"
-
-

@@ -19,15 +19,17 @@ with patch.dict(sys.modules, {'db': database_stub}):
 
 
 class PayoutTests(unittest.TestCase):
-    def test_rounding_never_exceeds_entry_pool(self):
-        for player_count in range(1, 501):
+    def test_rounding_preserves_entry_fee_and_exact_pool(self):
+        for player_count in range(1, 1001):
             with self.subTest(player_count=player_count):
                 result = payout.payouts(player_count)
                 self.assertEqual(sum(result), player_count * 2)
-                self.assertTrue(all(amount >= 0 for amount in result))
+                self.assertTrue(all(amount >= 2 for amount in result))
                 self.assertEqual(result, sorted(result, reverse=True))
 
     def test_tied_third_place_stays_within_seven_player_pool(self):
+        self.assertEqual(payout.payouts(7), [5, 4, 3, 2])
+
         players = [(player_id, place) for player_id, place in enumerate(
             [1, 2, 3, 3, 5, 6, 7],
             start=1,
@@ -47,7 +49,7 @@ class PayoutTests(unittest.TestCase):
             result = payout.payout_manager('2026-11-03')
 
         self.assertEqual(result, 'payouts done for 2026-11-03')
-        self.assertEqual(payments[:4], [(1, 6.0), (2, 4.0), (3, 2.0), (4, 2.0)])
+        self.assertEqual(payments[:4], [(1, 5.0), (2, 4.0), (3, 2.5), (4, 2.5)])
         self.assertEqual(sum(amount for _, amount in payments), 14)
 
 

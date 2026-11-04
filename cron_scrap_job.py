@@ -1,11 +1,17 @@
 import time
+from pathlib import Path
+
 import requests
 from datetime import datetime
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+load_dotenv(Path(__file__).with_name('.env'))
+
 from db import upsert_league_schedule
 
 # --- Configuration ---

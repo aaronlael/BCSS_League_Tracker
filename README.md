@@ -34,7 +34,7 @@ App to Track the Breaking Chains Sober Sundays disc golf league
   
    
 
-The `run_scraper.sh` task launcher expects `host`, `user`, `password`, and `database` to be set in the task environment. Keep database credentials out of the script and version control.
+The scraper loads `host`, `user`, `password`, and `database` from a `.env` file beside `cron_scrap_job.py`. Keep that file private and out of version control; `.env` is ignored by Git. The scraper uses `python-dotenv` to load it.
 
  To do's
   * season reset functionality/create new league

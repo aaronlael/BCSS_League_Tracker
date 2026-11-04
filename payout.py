@@ -17,8 +17,17 @@ def payouts(player_count: int) -> list:
     for i in range(1, positions + 1):
         payout.append(round((player_count * 2) * get_curves_value(positions, i) / curves_sum))
 
-    if sum(payout) < (player_count * 2):
-        payout[0] += (player_count *2) - sum(payout)
+    difference = (player_count * 2) - sum(payout)
+    if difference > 0:
+        payout[0] += difference
+    elif difference < 0:
+        excess = -difference
+        for i in range(len(payout) - 1, -1, -1):
+            reduction = min(payout[i], excess)
+            payout[i] -= reduction
+            excess -= reduction
+            if not excess:
+                break
     return payout
 
 
@@ -74,6 +83,5 @@ def payout_manager(current_date: str):
                 return err
 
     return f"payouts done for {current_date}"
-
 
 
